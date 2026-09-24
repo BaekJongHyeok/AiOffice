@@ -42,6 +42,24 @@
   let furniture=loadFurniture();
   const saveFurniture=()=>localStorage.setItem('aiOfficeFurnitureV3',JSON.stringify(furniture));
 
+  const loadCeoProfile=()=>{try{
+    const saved=JSON.parse(localStorage.getItem('aiOfficeCeoProfileV1'));
+    return saved && typeof saved==='object' ? saved : {name:'대표',spriteStyle:'leader'};
+  }catch{return {name:'대표',spriteStyle:'leader'}}};
+  let ceoProfile=loadCeoProfile();
+  const saveCeoProfile=()=>localStorage.setItem('aiOfficeCeoProfileV1',JSON.stringify(ceoProfile));
+
+  function ceoAsEmployee(){
+    return {
+      id:'__ceo__',
+      name:ceoProfile.name||'대표',
+      rank:'CEO',
+      department:'대표실',
+      role:'CEO',
+      spriteStyle:ceoProfile.spriteStyle||'leader'
+    };
+  }
+
   const loadSeatAssignments=()=>{
     try{
       const saved=JSON.parse(localStorage.getItem('aiOfficeSeatAssignmentsV2'));
@@ -211,7 +229,10 @@
           <h2>AI 직원들과 함께 일하는 회사</h2>
           <p>직원들이 실제 사무실에서 움직이고, 회의하고, 보고하는 모습을 확인하세요.</p>
         </div>
-        <div id="companyStats" class="company-stats"></div>
+        <div class="company-toolbar-actions">
+          <button id="ceoSettingsBtn" class="btn ghost ceo-settings-btn">👑 대표 설정</button>
+          <div id="companyStats" class="company-stats"></div>
+        </div>
       </div>
 
       <div class="company-layout game-company-layout">
@@ -230,6 +251,7 @@
             </div>
           </div>
 
+          <div id="simCeo" class="sim-ceo"></div>
           <div id="simEmployees" class="sim-employees"></div>
           <div id="employeeDialogHost" class="employee-dialog-host"></div>
           <div id="officeActivity" class="office-activity game-activity"></div>
@@ -272,9 +294,58 @@
           </div>
         </aside>
       </div>
+
+      <div id="ceoProfileModal" class="modal hidden">
+        <div class="modal-card ceo-profile-modal-card">
+          <div class="modal-head"><h2>대표 캐릭터 설정</h2><button id="closeCeoProfile" class="icon-btn">✕</button></div>
+          <div class="form-grid">
+            <label>대표 이름<input id="ceoProfileName" value="${escapeHtml(ceoProfile.name||'대표')}" /></label>
+            <label>캐릭터 스타일
+              <select id="ceoProfileSprite">
+                <option value="leader">리더 / CEO</option>
+                <option value="planning">기획</option>
+                <option value="marketing">마케팅</option>
+                <option value="development">개발</option>
+                <option value="design">디자인</option>
+                <option value="analysis">분석</option>
+                <option value="qa">QA</option>
+              </select>
+            </label>
+          </div>
+          <div class="modal-actions">
+            <button id="cancelCeoProfile" class="btn ghost">취소</button>
+            <button id="saveCeoProfileBtn" class="btn primary">저장</button>
+          </div>
+        </div>
+      </div>
     `;
 
     renderFurniture();
+    renderCeoCharacter();
+
+    const ceoModal=document.querySelector('#ceoProfileModal');
+    const ceoOpen=document.querySelector('#ceoSettingsBtn');
+    const ceoName=document.querySelector('#ceoProfileName');
+    const ceoSprite=document.querySelector('#ceoProfileSprite');
+    const closeCeo=()=>ceoModal?.classList.add('hidden');
+    if(ceoSprite) ceoSprite.value=ceoProfile.spriteStyle||'leader';
+    ceoOpen?.addEventListener('click',()=>{
+      if(ceoName) ceoName.value=ceoProfile.name||'대표';
+      if(ceoSprite) ceoSprite.value=ceoProfile.spriteStyle||'leader';
+      ceoModal?.classList.remove('hidden');
+    });
+    document.querySelector('#closeCeoProfile')?.addEventListener('click',closeCeo);
+    document.querySelector('#cancelCeoProfile')?.addEventListener('click',closeCeo);
+    document.querySelector('#saveCeoProfileBtn')?.addEventListener('click',()=>{
+      ceoProfile={
+        name:(ceoName?.value||'대표').trim()||'대표',
+        spriteStyle:ceoSprite?.value||'leader'
+      };
+      saveCeoProfile();
+      renderCeoCharacter();
+      closeCeo();
+    });
+
     const editBtn=document.querySelector('#layoutEditBtn'), tools=document.querySelector('#layoutTools'), office=document.querySelector('.game-office');
     const refreshSelectedFurnitureLabel=()=>{
       const label=document.querySelector('#selectedFurnitureLabel');
@@ -555,9 +626,14 @@
     return points[index%points.length];
   }
 
-  function ceoReportPoint() {
+  function ceoCharacterPoint() {
     const desk=furnitureByType('ceo-desk')[0];
-    return desk ? clampOfficePoint([desk.x+desk.w*.50,desk.y+desk.h*.95]) : [22,20];
+    return desk ? clampOfficePoint([desk.x+desk.w*.50,desk.y+desk.h*.72]) : [22,18];
+  }
+
+  function ceoReportPoint() {
+    const [x,y]=ceoCharacterPoint();
+    return clampOfficePoint([x,y+8]);
   }
 
   function managerReportPoint() {
@@ -590,6 +666,19 @@
     return employeePlacement(employee,index,visualState).point;
   }
 
+  function renderCeoCharacter() {
+    const host=document.querySelector('#simCeo');
+    if(!host) return;
+    const ceo=ceoAsEmployee();
+    const [x,y]=ceoCharacterPoint();
+    host.innerHTML=`
+      <div class="ceo-character-entity" style="--x:${x}%;--y:${y}%">
+        <div class="ceo-nameplate"><span>👑</span><b>${escapeHtml(ceo.name)}</b><small>CEO</small></div>
+        <div class="ceo-character-body">${pixelAvatar(ceo,'idle')}</div>
+      </div>
+    `;
+  }
+
   function renderCompanyOffice() {
     if (!document.querySelector('#simEmployees')) buildCompanyShell();
     const wrap = document.querySelector('#simEmployees');
@@ -599,6 +688,7 @@
       companyUI.selectedEmployeeId = null;
     }
 
+    renderCeoCharacter();
     const visibleEmployees = state.employees.slice(0,9);
     reconcileSeatAssignments();
     const liveIds = new Set(visibleEmployees.map(e => e.id));
@@ -979,7 +1069,7 @@
     updateSelectedEmployeeStyles();
   });
   const version = document.querySelector('.sidebar-foot small');
-  if (version) version.textContent = 'v1.5.0 · Workflow Movement';
+  if (version) version.textContent = 'v1.5.1 · CEO Character';
 
   try {
     renderOffice = renderCompanyOffice;
