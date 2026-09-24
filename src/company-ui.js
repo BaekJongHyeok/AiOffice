@@ -460,7 +460,6 @@
           item.x=Math.max(0,Math.min(100-item.w,originX+dx));
           item.y=Math.max(0,Math.min(100-item.h,originY+dy));
           el.style.left=item.x+'%'; el.style.top=item.y+'%';
-          if(item.type==='ceo-desk') renderCeoCharacter();
         };
         const up=(e)=>{
           if(e.pointerId!==pointerId)return;
