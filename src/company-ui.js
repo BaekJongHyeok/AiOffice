@@ -123,26 +123,32 @@
           <div class="office-decoration deco-2">📚</div>
           <div class="office-decoration deco-3">☕</div>
           <div id="simEmployees" class="sim-employees"></div>
+          <div id="employeeDialogHost" class="employee-dialog-host"></div>
           <div id="officeActivity" class="office-activity"></div>
         </section>
 
-        <aside id="employeeInspector" class="employee-inspector card"></aside>
-      </div>
-
-      <section class="quick-directive card">
-        <div class="quick-directive-head">
-          <div><h3>👑 CEO 빠른 업무 지시</h3><p>회사 화면을 떠나지 않고 직원에게 바로 업무를 배정합니다.</p></div>
-          <label class="quick-auto"><input id="autoRunToggle" type="checkbox" checked> 자동 실행</label>
-        </div>
-        <textarea id="taskInput" placeholder="예: 신규 고객 유치를 위한 실행 가능한 마케팅 전략을 만들어줘."></textarea>
-        <div class="quick-directive-bottom">
-          <div id="assigneeList" class="assignee-list quick-assignees"></div>
-          <div class="quick-directive-actions">
+        <aside class="ceo-directive-panel card">
+          <div class="ceo-directive-header">
+            <div class="ceo-crown">👑</div>
+            <div>
+              <div class="company-kicker">CEO COMMAND</div>
+              <h2>빠른 업무 지시</h2>
+              <p>회사 화면을 보면서 직원에게 바로 업무를 배정합니다.</p>
+            </div>
+          </div>
+          <textarea id="taskInput" placeholder="예: 신규 고객 유치를 위한 실행 가능한 마케팅 전략을 만들어줘."></textarea>
+          <div class="ceo-directive-label">업무를 맡길 직원</div>
+          <div id="assigneeList" class="assignee-list ceo-assignees"></div>
+          <div class="ceo-directive-options">
+            <label class="quick-auto"><input id="autoRunToggle" type="checkbox" checked> 배정 즉시 자동 실행</label>
+          </div>
+          <div class="ceo-directive-actions">
             <button id="selectAllBtnCompany" class="btn ghost">전체 선택</button>
             <button id="runTaskBtnCompany" class="btn primary">▶ 업무 배정</button>
           </div>
-        </div>
-      </section>
+          <div class="ceo-directive-hint">직원이 업무를 받으면 오피스에서 상태와 위치가 자동으로 바뀝니다.</div>
+        </aside>
+      </div>
     `;
 
     const selectAll = document.querySelector('#selectAllBtnCompany');
@@ -179,8 +185,8 @@
     const wrap = document.querySelector('#simEmployees');
     if (!wrap) return;
 
-    if (!companyUI.selectedEmployeeId || !state.employees.some(e => e.id === companyUI.selectedEmployeeId)) {
-      companyUI.selectedEmployeeId = state.employees[0]?.id || null;
+    if (companyUI.selectedEmployeeId && !state.employees.some(e => e.id === companyUI.selectedEmployeeId)) {
+      companyUI.selectedEmployeeId = null;
     }
 
     const visibleEmployees = state.employees.slice(0,9);
@@ -213,9 +219,11 @@
           <div class="pixel-workstation"><span class="monitor"></span><span class="desk-line"></span></div>
           <div class="employee-task-caption"></div>
         `;
-        el.onclick = () => {
-          companyUI.selectedEmployeeId = el.dataset.id;
-          renderCompanyOffice();
+        el.onclick = (event) => {
+          event.stopPropagation();
+          companyUI.selectedEmployeeId = companyUI.selectedEmployeeId === el.dataset.id ? null : el.dataset.id;
+          renderEmployeeDialog();
+          updateSelectedEmployeeStyles();
         };
         wrap.appendChild(el);
       }
@@ -254,7 +262,8 @@
         assignees.innerHTML=state.employees.map(e=>`<label class="assignee"><input type="checkbox" value="${e.id}" ${checked.has(e.id)?'checked':''}><span>${e.avatar||'🧑‍💼'} ${escapeHtml(e.name)} · ${escapeHtml(e.role)}</span><span class="provider">${providerLabel[e.provider]||e.provider}</span></label>`).join('');
       }
     }
-    renderInspector();
+    updateSelectedEmployeeStyles();
+    renderEmployeeDialog();
     renderStats();
     renderActivity();
   }
@@ -287,10 +296,20 @@
     el.innerHTML = `<h4>최근 활동</h4>${rows.join('') || '<p>아직 활동 기록이 없습니다.</p>'}`;
   }
 
-  function renderInspector() {
-    const panel=document.querySelector('#employeeInspector'); if(!panel) return;
+  function updateSelectedEmployeeStyles() {
+    document.querySelectorAll('.sim-employee').forEach(el => {
+      el.classList.toggle('selected', !!companyUI.selectedEmployeeId && el.dataset.id === companyUI.selectedEmployeeId);
+    });
+  }
+
+  function renderEmployeeDialog() {
+    const host=document.querySelector('#employeeDialogHost');
+    if(!host) return;
     const e=state.employees.find(x=>x.id===companyUI.selectedEmployeeId);
-    if(!e){panel.innerHTML='<div class="employee-empty">직원을 채용하면 상세 정보가 표시됩니다.</div>';return}
+    if(!e){ host.innerHTML=''; return; }
+
+    const anchor=document.querySelector(`.sim-employee[data-id="${e.id}"]`);
+    if(!anchor){ host.innerHTML=''; return; }
 
     const task=activeTask(e.id);
     const recent=state.reports.find(r=>r.employeeId===e.id);
@@ -299,51 +318,69 @@
     const progress = task ? (task.status==='working'?65:task.status==='queued'?15:task.status==='opened'?40:100) : 0;
     const project=task?.projectId?state.projects.find(p=>p.id===task.projectId):null;
 
-    panel.innerHTML=`
-      <div class="inspector-profile">
-        <div class="inspector-avatar">${pixelAvatar(e,vstate,true)}</div>
-        <div>
-          <div class="inspector-name-line"><h2>${escapeHtml(e.name)}</h2><span>${escapeHtml(e.rank||'사원')}</span></div>
-          <p>${escapeHtml(e.department||'미지정')} · ${providerIcon[e.provider]||''} ${providerLabel[e.provider]||e.provider}</p>
-          <div class="status-chip ${vstate}"><i></i>${escapeHtml(meta[0])} · ${escapeHtml(meta[1])}</div>
+    const office=document.querySelector('.sim-office');
+    const officeRect=office.getBoundingClientRect();
+    const anchorRect=anchor.getBoundingClientRect();
+    const anchorCenterX=anchorRect.left-officeRect.left+(anchorRect.width/2);
+    const anchorCenterY=anchorRect.top-officeRect.top+(anchorRect.height/2);
+    const placeLeft=anchorCenterX > officeRect.width*0.62;
+    const top=Math.max(12,Math.min(officeRect.height-430,anchorCenterY-165));
+    const left=placeLeft ? Math.max(12,anchorCenterX-390) : Math.min(officeRect.width-372,anchorCenterX+82);
+
+    host.innerHTML=`
+      <div class="employee-popover ${placeLeft?'popover-left':'popover-right'}" style="left:${left}px;top:${top}px">
+        <button class="employee-popover-close" aria-label="닫기">✕</button>
+        <div class="popover-profile">
+          <div class="popover-avatar">${pixelAvatar(e,vstate,true)}</div>
+          <div class="popover-profile-copy">
+            <div class="inspector-name-line"><h2>${escapeHtml(e.name)}</h2><span>${escapeHtml(e.rank||'사원')}</span></div>
+            <p>${escapeHtml(e.department||'미지정')} · ${providerIcon[e.provider]||''} ${providerLabel[e.provider]||e.provider}</p>
+            <div class="status-chip ${vstate}"><i></i>${escapeHtml(meta[0])} · ${escapeHtml(meta[1])}</div>
+          </div>
         </div>
-      </div>
 
-      <div class="inspector-section">
-        <div class="section-title"><h3>현재 업무</h3>${task?'<span class="live-tag">LIVE</span>':''}</div>
-        ${task ? `
-          <div class="current-task-box">
-            <b>${escapeHtml(task.task)}</b>
-            ${project?`<small>프로젝트 · ${escapeHtml(project.name)}</small>`:''}
-            <div class="task-progress"><span style="width:${progress}%"></span></div>
-            <div class="task-progress-meta"><span>진행 단계</span><strong>${progress}%</strong></div>
-            ${task.automationError?`<p class="inline-error">${escapeHtml(task.automationError)}</p>`:''}
-          </div>` : '<div class="no-current-task">현재 진행 중인 업무가 없습니다.</div>'}
-      </div>
+        <div class="popover-section">
+          <div class="section-title"><h3>현재 업무</h3>${task?'<span class="live-tag">LIVE</span>':''}</div>
+          ${task ? `
+            <div class="current-task-box">
+              <b>${escapeHtml(task.task)}</b>
+              ${project?`<small>프로젝트 · ${escapeHtml(project.name)}</small>`:''}
+              <div class="task-progress"><span style="width:${progress}%"></span></div>
+              <div class="task-progress-meta"><span>진행 단계</span><strong>${progress}%</strong></div>
+              ${task.automationError?`<p class="inline-error">${escapeHtml(task.automationError)}</p>`:''}
+            </div>` : '<div class="no-current-task">현재 진행 중인 업무가 없습니다.</div>'}
+        </div>
 
-      <div class="inspector-section">
-        <div class="section-title"><h3>직원 정보</h3></div>
-        <dl class="employee-info-grid">
-          <dt>역할</dt><dd>${escapeHtml(e.role||'일반 업무')}</dd>
-          <dt>업무 스타일</dt><dd>${escapeHtml(e.traits||'미설정')}</dd>
-          <dt>연결 AI</dt><dd>${providerIcon[e.provider]||''} ${providerLabel[e.provider]||e.provider}</dd>
-        </dl>
-      </div>
+        <div class="popover-section compact-info">
+          <dl class="employee-info-grid">
+            <dt>역할</dt><dd>${escapeHtml(e.role||'일반 업무')}</dd>
+            <dt>업무 스타일</dt><dd>${escapeHtml(e.traits||'미설정')}</dd>
+            <dt>연결 AI</dt><dd>${providerIcon[e.provider]||''} ${providerLabel[e.provider]||e.provider}</dd>
+          </dl>
+        </div>
 
-      <div class="inspector-section">
-        <div class="section-title"><h3>최근 보고</h3></div>
-        ${recent?`<div class="recent-report-mini"><b>${escapeHtml(recent.task)}</b><p>${escapeHtml(String(recent.result||'').slice(0,170))}${String(recent.result||'').length>170?'…':''}</p></div>`:'<div class="no-current-task">아직 보고 기록이 없습니다.</div>'}
-      </div>
+        <div class="popover-section">
+          <div class="section-title"><h3>최근 보고</h3></div>
+          ${recent?`<div class="recent-report-mini"><b>${escapeHtml(recent.task)}</b><p>${escapeHtml(String(recent.result||'').slice(0,150))}${String(recent.result||'').length>150?'…':''}</p></div>`:'<div class="no-current-task">아직 보고 기록이 없습니다.</div>'}
+        </div>
 
-      <div class="inspector-actions">
-        <button class="btn ghost inspector-edit">✏ 정보 수정</button>
-        <button class="btn ghost inspector-task" ${task?'':'disabled'}>📋 업무 상세</button>
-        <button class="btn primary inspector-employee">⚙ 직원 관리</button>
+        <div class="popover-actions">
+          <button class="btn ghost inspector-edit">✏ 정보 수정</button>
+          <button class="btn ghost inspector-task" ${task?'':'disabled'}>📋 업무 상세</button>
+          <button class="btn primary inspector-employee">⚙ 직원 관리</button>
+        </div>
       </div>`;
 
-    panel.querySelector('.inspector-edit')?.addEventListener('click',()=>openEmployeeModal(e.id));
-    panel.querySelector('.inspector-employee')?.addEventListener('click',()=>switchView('employees'));
-    panel.querySelector('.inspector-task')?.addEventListener('click',()=>{
+    host.querySelector('.employee-popover-close')?.addEventListener('click',(event)=>{
+      event.stopPropagation();
+      companyUI.selectedEmployeeId=null;
+      renderEmployeeDialog();
+      updateSelectedEmployeeStyles();
+    });
+    host.querySelector('.inspector-edit')?.addEventListener('click',(event)=>{event.stopPropagation();openEmployeeModal(e.id)});
+    host.querySelector('.inspector-employee')?.addEventListener('click',(event)=>{event.stopPropagation();switchView('employees')});
+    host.querySelector('.inspector-task')?.addEventListener('click',(event)=>{
+      event.stopPropagation();
       switchView('tasks');
       setTimeout(()=>{
         const el=document.querySelector(`.task-item[data-task-id="${task?.id}"]`);
@@ -354,9 +391,16 @@
     });
   }
 
+
   buildCompanyShell();
+  document.querySelector('.sim-office')?.addEventListener('click', (event) => {
+    if (event.target.closest('.sim-employee') || event.target.closest('.employee-popover')) return;
+    companyUI.selectedEmployeeId = null;
+    renderEmployeeDialog();
+    updateSelectedEmployeeStyles();
+  });
   const version = document.querySelector('.sidebar-foot small');
-  if (version) version.textContent = 'v0.5.1 · Stable Employees';
+  if (version) version.textContent = 'v0.5.2 · Employee Dialog';
 
   try {
     renderOffice = renderCompanyOffice;
