@@ -183,30 +183,66 @@
       companyUI.selectedEmployeeId = state.employees[0]?.id || null;
     }
 
-    wrap.innerHTML = state.employees.slice(0,9).map((employee,index) => {
+    const visibleEmployees = state.employees.slice(0,9);
+    const liveIds = new Set(visibleEmployees.map(e => e.id));
+
+    wrap.querySelectorAll('.sim-employee').forEach(el => {
+      if (!liveIds.has(el.dataset.id)) el.remove();
+    });
+
+    visibleEmployees.forEach((employee,index) => {
       const vstate = employeeVisualState(employee);
       const pos = employeePosition(index,vstate);
       const meta = statusMeta[vstate] || statusMeta.idle;
       const task = activeTask(employee.id) || recentDoneTask(employee.id);
       const selected = companyUI.selectedEmployeeId === employee.id;
-      return `
-        <button class="sim-employee ${selected?'selected':''} sim-${vstate}" data-id="${employee.id}" style="--x:${pos[0]}%;--y:${pos[1]}%;--delay:${index*70}ms">
-          <div class="employee-status-bubble">
-            <span class="status-dot-mini ${vstate}"></span>
-            <b>${escapeHtml(employee.name)}</b>
-            <small>${escapeHtml(meta[0])}</small>
-          </div>
-          <div class="employee-character">${pixelAvatar(employee,vstate)}</div>
-          <div class="pixel-workstation"><span class="monitor"></span><span class="desk-line"></span></div>
-          <div class="employee-task-caption">${escapeHtml(task?.task?.slice(0,30) || employee.role || '대기')}</div>
-        </button>`;
-    }).join('');
 
-    wrap.querySelectorAll('.sim-employee').forEach(el => {
-      el.onclick = () => {
-        companyUI.selectedEmployeeId = el.dataset.id;
-        renderCompanyOffice();
-      };
+      let el = wrap.querySelector(`.sim-employee[data-id="${employee.id}"]`);
+      if (!el) {
+        el = document.createElement('button');
+        el.className = 'sim-employee';
+        el.dataset.id = employee.id;
+        el.style.setProperty('--delay', `${index*70}ms`);
+        el.innerHTML = `
+          <div class="employee-status-bubble">
+            <span class="status-dot-mini"></span>
+            <b></b>
+            <small></small>
+          </div>
+          <div class="employee-character"></div>
+          <div class="pixel-workstation"><span class="monitor"></span><span class="desk-line"></span></div>
+          <div class="employee-task-caption"></div>
+        `;
+        el.onclick = () => {
+          companyUI.selectedEmployeeId = el.dataset.id;
+          renderCompanyOffice();
+        };
+        wrap.appendChild(el);
+      }
+
+      const previousState = el.dataset.visualState;
+      el.dataset.visualState = vstate;
+      el.className = `sim-employee ${selected?'selected':''} sim-${vstate}`;
+      el.style.setProperty('--x', `${pos[0]}%`);
+      el.style.setProperty('--y', `${pos[1]}%`);
+
+      const dot = el.querySelector('.status-dot-mini');
+      dot.className = `status-dot-mini ${vstate}`;
+      el.querySelector('.employee-status-bubble b').textContent = employee.name;
+      el.querySelector('.employee-status-bubble small').textContent = meta[0];
+      el.querySelector('.employee-task-caption').textContent = task?.task?.slice(0,30) || employee.role || '대기';
+
+      const character = el.querySelector('.employee-character');
+      const signature = `${employee.spriteStyle||'auto'}|${employee.department}|${employee.role}|${vstate}`;
+      if (character.dataset.signature !== signature) {
+        character.dataset.signature = signature;
+        character.innerHTML = pixelAvatar(employee,vstate);
+      }
+
+      if (previousState && previousState !== vstate) {
+        el.classList.add('state-changed');
+        setTimeout(() => el.classList.remove('state-changed'), 450);
+      }
     });
 
     const assignees=document.querySelector('#assigneeList');
@@ -320,7 +356,7 @@
 
   buildCompanyShell();
   const version = document.querySelector('.sidebar-foot small');
-  if (version) version.textContent = 'v0.5.0 · Company Simulation';
+  if (version) version.textContent = 'v0.5.1 · Stable Employees';
 
   try {
     renderOffice = renderCompanyOffice;
