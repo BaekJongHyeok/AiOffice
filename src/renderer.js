@@ -245,7 +245,7 @@ function saveResult(){
 function switchView(name){
   $$('.view').forEach(v=>v.classList.remove('active')); $$('.nav').forEach(n=>n.classList.remove('active'));
   $(`#${name}View`).classList.add('active'); $(`.nav[data-view="${name}"]`)?.classList.add('active');
-  const titles={office:['대표실','구독 중인 AI 직원들에게 업무를 지시하세요.'],employees:['직원 관리','직원마다 ChatGPT, Claude, Gemini 구독을 배정합니다.'],tasks:['업무 보드','구독 AI 작업 큐와 결과를 관리합니다.'],reports:['CEO 보고함','직원들의 완료 보고를 확인합니다.'],settings:['구독 연결','기존 AI 구독 계정을 AI OFFICE 전용 세션으로 연결합니다.']};
+  const titles={office:['회사','AI 직원들의 업무와 움직임을 한눈에 확인하고 지시하세요.'],employees:['직원 관리','직원마다 ChatGPT, Claude, Gemini 구독을 배정합니다.'],tasks:['업무 보드','구독 AI 작업 큐와 결과를 관리합니다.'],reports:['CEO 보고함','직원들의 완료 보고를 확인합니다.'],settings:['구독 연결','기존 AI 구독 계정을 AI OFFICE 전용 세션으로 연결합니다.']};
   $('#viewTitle').textContent=titles[name][0];$('#viewSubtitle').textContent=titles[name][1];
   if(name==='settings') refreshSessions();
 }
