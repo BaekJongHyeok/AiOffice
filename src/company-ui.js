@@ -165,17 +165,26 @@
 
     if (done) {
       const elapsed = Date.now() - (done.finishedAt || Date.now());
+      const isProjectWork = done.taskType === 'project-work' && !!done.projectId;
+      const reportsToCeo = done.taskType === 'project-final' || !done.projectId;
 
-      if (done.taskType === 'project-final') {
+      if (reportsToCeo) {
         if (elapsed < 3500) return 'moving-ceo';
         if (elapsed < 9000) return 'ceo-report';
         if (elapsed < 12500) return 'returning';
         return 'done';
       }
 
-      if (elapsed < 3500) return 'moving-report';
-      if (elapsed < 8500) return 'reporting';
-      if (elapsed < 12000) return 'returning';
+      if (isProjectWork) {
+        if (elapsed < 3500) return 'moving-report';
+        if (elapsed < 8500) return 'reporting';
+        if (elapsed < 12000) return 'returning';
+        return 'done';
+      }
+
+      if (elapsed < 3500) return 'moving-ceo';
+      if (elapsed < 9000) return 'ceo-report';
+      if (elapsed < 12500) return 'returning';
       return 'done';
     }
 
@@ -213,10 +222,10 @@
     'moving-meeting': ['회의실 이동 중','회의실로 이동','🚶'],
     meeting: ['회의 중','프로젝트 회의','👥'],
     returning: ['자리 복귀 중','자기 자리로 복귀','↩'],
-    'moving-report': ['대표 보고 이동 중','대표에게 보고하러 이동','🚶'],
-    reporting: ['대표 보고 중','대표에게 결과 보고','📨'],
-    'moving-ceo': ['CEO실 이동 중','CEO에게 최종 보고하러 이동','🚶'],
-    'ceo-report': ['최종 보고 중','CEO에게 최종 보고','👑'],
+    'moving-report': ['팀장 보고 이동 중','팀장에게 보고하러 이동','🚶'],
+    reporting: ['팀장 보고 중','팀장에게 결과 보고','📨'],
+    'moving-ceo': ['대표 보고 이동 중','대표에게 보고하러 이동','🚶'],
+    'ceo-report': ['대표 보고 중','대표에게 결과 보고','👑'],
     done: ['업무 완료','업무 완료','✓'],
     blocked: ['확인 필요','자동화 확인 필요','!'],
   };
@@ -643,16 +652,24 @@
     return clampOfficePoint([x,y+9]);
   }
 
-  function managerReportPoint() {
-    const leaderIndex=state.employees.findIndex(e=>employeeRoleType(e)==='leader');
-    if(leaderIndex>=0){
-      const leader=state.employees[leaderIndex];
-      const seat=homeSeatForEmployee(leader,leaderIndex);
+  function managerReportPoint(task=null) {
+    const project = task?.projectId ? state.projects.find(p=>p.id===task.projectId) : null;
+    const managerId = project?.managerId || null;
+    let managerIndex = managerId ? state.employees.findIndex(e=>e.id===managerId) : -1;
+
+    if(managerIndex<0) managerIndex=state.employees.findIndex(e=>employeeRoleType(e)==='leader');
+
+    if(managerIndex>=0){
+      const manager=state.employees[managerIndex];
+      const seat=homeSeatForEmployee(manager,managerIndex);
       const [x,y]=seat.point;
       return clampOfficePoint([x+4,y+1]);
     }
+
     const seats=allWorkSeats();
-    return seats.length ? clampOfficePoint([seats[seats.length-1].point[0]+4,seats[seats.length-1].point[1]]) : [73,69];
+    return seats.length
+      ? clampOfficePoint([seats[seats.length-1].point[0]+4,seats[seats.length-1].point[1]])
+      : [73,69];
   }
 
   function employeePlacement(employee,index,visualState) {
@@ -661,10 +678,11 @@
       return {point:meetingSeatForEmployee(employee,index),facing:'down',seated:false};
     }
     if(visualState==='reporting'||visualState==='moving-report') {
-      return {point:ceoReportPoint(),facing:'up',seated:false};
+      const done=recentDoneTask(employee.id);
+      return {point:managerReportPoint(done),facing:'up',seated:false};
     }
     if(visualState==='moving-ceo'||visualState==='ceo-report') {
-      return {point:ceoReportPoint(),facing:'down',seated:false};
+      return {point:ceoReportPoint(),facing:'up',seated:false};
     }
     return {point:home.point,facing:home.facing||'up',seated:false};
   }
@@ -1074,7 +1092,7 @@
     updateSelectedEmployeeStyles();
   });
   const version = document.querySelector('.sidebar-foot small');
-  if (version) version.textContent = 'v1.7.4 · Report To CEO';
+  if (version) version.textContent = 'v1.7.5 · Report Routing';
 
   try {
     renderOffice = renderCompanyOffice;
