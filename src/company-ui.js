@@ -416,10 +416,11 @@
     host.innerHTML=furniture.map(item=>{
       const preset=furnitureCatalog[item.type]||item;
       const isDesk=['desk-1p','desk-2p','workstation-4p'].includes(item.type);
+      const isDepthDesk=isDesk||item.type==='ceo-desk';
       const pins='';
-      return `<button type="button" class="office-item pixel-furniture ${isDesk?'depth-desk':''} ${companyUI.selectedFurnitureId===item.id?'selected':''}" data-id="${item.id}" aria-label="${preset.label||item.type}" style="left:${item.x}%;top:${item.y}%;width:${item.w}%;height:${item.h}%">
+      return `<button type="button" class="office-item pixel-furniture ${isDepthDesk?'depth-desk':''} ${item.type==='ceo-desk'?'ceo-depth-desk':''} ${companyUI.selectedFurnitureId===item.id?'selected':''}" data-id="${item.id}" aria-label="${preset.label||item.type}" style="left:${item.x}%;top:${item.y}%;width:${item.w}%;height:${item.h}%">
         <img class="furniture-sprite real-furniture-image furniture-base-image" src="assets/furniture/${item.type}.png" alt="" draggable="false">
-        ${isDesk ? '<img class="furniture-sprite real-furniture-image furniture-front-image" src="assets/furniture/'+item.type+'.png" alt="" draggable="false">' : ''}
+        ${isDepthDesk ? '<img class="furniture-sprite real-furniture-image furniture-front-image" src="assets/furniture/'+item.type+'.png" alt="" draggable="false">' : ''}
         ${pins}
         <em>${preset.label||item.label||item.type}</em>
       </button>`;
@@ -462,6 +463,7 @@
           item.x=Math.max(0,Math.min(100-item.w,originX+dx));
           item.y=Math.max(0,Math.min(100-item.h,originY+dy));
           el.style.left=item.x+'%'; el.style.top=item.y+'%';
+          if(item.type==='ceo-desk') renderCeoCharacter();
         };
         const up=(e)=>{
           if(e.pointerId!==pointerId)return;
@@ -626,14 +628,27 @@
     return points[index%points.length];
   }
 
-  function ceoCharacterPoint() {
+  function ceoDeskSeat() {
     const desk=furnitureByType('ceo-desk')[0];
-    return desk ? clampOfficePoint([desk.x+desk.w*.50,desk.y+desk.h*.72]) : [22,18];
+    if(!desk) return {point:[22,18],facing:'down'};
+    return {
+      point:clampOfficePoint([desk.x+desk.w*.50,desk.y+desk.h*.47]),
+      facing:'down',
+      furnitureId:desk.id
+    };
+  }
+
+  function ceoCharacterPoint() {
+    return ceoDeskSeat().point;
   }
 
   function ceoReportPoint() {
-    const [x,y]=ceoCharacterPoint();
-    return clampOfficePoint([x,y+8]);
+    const desk=furnitureByType('ceo-desk')[0];
+    if(!desk){
+      const [x,y]=ceoCharacterPoint();
+      return clampOfficePoint([x,y+10]);
+    }
+    return clampOfficePoint([desk.x+desk.w*.50,desk.y+desk.h*1.03]);
   }
 
   function managerReportPoint() {
@@ -672,7 +687,7 @@
     const ceo=ceoAsEmployee();
     const [x,y]=ceoCharacterPoint();
     host.innerHTML=`
-      <div class="ceo-character-entity" style="--x:${x}%;--y:${y}%">
+      <div class="ceo-character-entity ceo-at-desk" style="--x:${x}%;--y:${y}%">
         <div class="ceo-nameplate"><span>👑</span><b>${escapeHtml(ceo.name)}</b><small>CEO</small></div>
         <div class="ceo-character-body">${pixelAvatar(ceo,'idle')}</div>
       </div>
@@ -1069,7 +1084,7 @@
     updateSelectedEmployeeStyles();
   });
   const version = document.querySelector('.sidebar-foot small');
-  if (version) version.textContent = 'v1.5.1 · CEO Character';
+  if (version) version.textContent = 'v1.5.2 · CEO Desk Seat';
 
   try {
     renderOffice = renderCompanyOffice;
