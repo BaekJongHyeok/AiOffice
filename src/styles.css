@@ -995,3 +995,35 @@ body{overflow:hidden}.app-shell{height:100vh;min-height:0;overflow:hidden}main{h
 .layout-editing .sim-ceo .ceo-character-entity{
   pointer-events:none!important;
 }
+
+/* v1.5.6 unified character layer: CEO and staff share simEmployees */
+.game-office .sim-employees{
+  position:absolute!important;
+  inset:0!important;
+  bottom:90px!important;
+  z-index:30!important;
+  pointer-events:auto!important;
+}
+.game-office .sim-employee{
+  pointer-events:auto!important;
+  touch-action:none!important;
+}
+.game-office .sim-employee *{
+  pointer-events:none!important;
+}
+.game-office .ceo-employee{
+  cursor:grab!important;
+}
+.game-office .ceo-employee .employee-status-bubble{
+  border-color:#d7a949!important;
+  background:#3a2b17ee!important;
+}
+.game-office .ceo-employee .employee-status-bubble small{
+  color:#ffd36b!important;
+}
+.game-office .ceo-employee.employee-dragging{
+  z-index:9500!important;
+  filter:drop-shadow(0 14px 14px #0009) brightness(1.08)!important;
+  transition:none!important;
+}
+.game-office .sim-ceo{display:none!important}

@@ -251,7 +251,6 @@
             </div>
           </div>
 
-          <div id="simCeo" class="sim-ceo"></div>
           <div id="simEmployees" class="sim-employees"></div>
           <div id="employeeDialogHost" class="employee-dialog-host"></div>
           <div id="officeActivity" class="office-activity game-activity"></div>
@@ -682,86 +681,116 @@
   }
 
   function renderCeoCharacter() {
-    const host=document.querySelector('#simCeo');
+    const host=document.querySelector('#simEmployees');
     if(!host) return;
+
     const ceo=ceoAsEmployee();
     const [x,y]=ceoCharacterPoint();
-    host.innerHTML=`
-      <div class="ceo-character-entity ceo-at-desk" style="--x:${x}%;--y:${y}%">
-        <div class="ceo-nameplate"><span>👑</span><b>${escapeHtml(ceo.name)}</b><small>CEO</small></div>
-        <div class="ceo-character-body">${pixelAvatar(ceo,'idle')}</div>
-      </div>
-    `;
+    let el=host.querySelector('.sim-employee[data-id="__ceo__"]');
 
-    const el=host.querySelector('.ceo-character-entity');
-    if(!el) return;
+    if(!el){
+      el=document.createElement('button');
+      el.type='button';
+      el.className='sim-employee ceo-employee';
+      el.dataset.id='__ceo__';
+      el.innerHTML=`
+        <div class="employee-status-bubble ceo-status-bubble">
+          <span class="status-dot-mini done"></span>
+          <b></b>
+          <small>CEO · 대표</small>
+        </div>
+        <div class="employee-character"></div>
+        <div class="employee-task-caption">대표 자리</div>
+      `;
 
-    el.addEventListener('pointerdown',(event)=>{
-      if(companyUI.layoutEdit) return;
-      if(event.button!==undefined && event.button!==0) return;
-
-      const office=document.querySelector('.game-office');
-      if(!office) return;
-
-      const pointerId=event.pointerId;
-      const rect=office.getBoundingClientRect();
-      const startX=event.clientX,startY=event.clientY;
-      const startLeft=parseFloat(el.style.getPropertyValue('--x'))||x;
-      const startTop=parseFloat(el.style.getPropertyValue('--y'))||y;
-      let dragging=false;
-
-      const move=(e)=>{
-        if(e.pointerId!==pointerId) return;
-        const dist=Math.hypot(e.clientX-startX,e.clientY-startY);
-        if(!dragging && dist>=7){
-          dragging=true;
-          el.classList.add('ceo-dragging');
-          try{el.setPointerCapture(pointerId)}catch{}
+      let suppressNextClick=false;
+      el.onclick=(event)=>{
+        if(suppressNextClick){
+          suppressNextClick=false;
+          event.preventDefault();
+          event.stopPropagation();
+          return;
         }
-        if(!dragging) return;
-
-        e.preventDefault();
-        const dx=(e.clientX-startX)/rect.width*100;
-        const dy=(e.clientY-startY)/rect.height*100;
-        const nx=Math.max(3,Math.min(97,startLeft+dx));
-        const ny=Math.max(8,Math.min(82,startTop+dy));
-        el.style.setProperty('--x',nx+'%');
-        el.style.setProperty('--y',ny+'%');
-
-        document.querySelectorAll('.office-item.ceo-depth-desk').forEach(desk=>{
-          const r=desk.getBoundingClientRect();
-          const over=e.clientX>=r.left&&e.clientX<=r.right&&e.clientY>=r.top&&e.clientY<=r.bottom;
-          desk.classList.toggle('ceo-drop-target',over);
-        });
+        if(companyUI.layoutEdit) return;
+        event.stopPropagation();
+        document.querySelector('#ceoSettingsBtn')?.click();
       };
 
-      const up=(e)=>{
-        if(e.pointerId!==pointerId) return;
-        try{el.releasePointerCapture(pointerId)}catch{}
-        el.removeEventListener('pointermove',move);
-        el.removeEventListener('pointerup',up);
-        el.removeEventListener('pointercancel',up);
+      el.addEventListener('pointerdown',(event)=>{
+        if(companyUI.layoutEdit) return;
+        if(event.button!==undefined && event.button!==0) return;
 
-        if(!dragging) return;
-        el.classList.remove('ceo-dragging');
+        const pointerId=event.pointerId;
+        const office=document.querySelector('.game-office');
+        if(!office) return;
 
-        let validDrop=false;
-        document.querySelectorAll('.office-item.ceo-depth-desk').forEach(desk=>{
-          const r=desk.getBoundingClientRect();
-          const over=e.clientX>=r.left&&e.clientX<=r.right&&e.clientY>=r.top&&e.clientY<=r.bottom;
-          desk.classList.remove('ceo-drop-target');
-          if(over) validDrop=true;
-        });
+        const rect=office.getBoundingClientRect();
+        const startX=event.clientX,startY=event.clientY;
+        const startLeft=parseFloat(el.style.getPropertyValue('--x'))||x;
+        const startTop=parseFloat(el.style.getPropertyValue('--y'))||y;
+        let dragging=false;
 
-        // CEO is bound to the executive desk. Valid drop snaps to its seat; invalid drop restores.
-        renderCeoCharacter();
-        if(validDrop) refreshEmployeeDestinations();
-      };
+        const move=(e)=>{
+          if(e.pointerId!==pointerId) return;
+          const distance=Math.hypot(e.clientX-startX,e.clientY-startY);
+          if(!dragging && distance>=7){
+            dragging=true;
+            suppressNextClick=true;
+            el.classList.add('employee-dragging','ceo-dragging');
+            try{el.setPointerCapture(pointerId)}catch{}
+          }
+          if(!dragging) return;
 
-      el.addEventListener('pointermove',move);
-      el.addEventListener('pointerup',up);
-      el.addEventListener('pointercancel',up);
-    });
+          e.preventDefault();
+          const dx=(e.clientX-startX)/rect.width*100;
+          const dy=(e.clientY-startY)/rect.height*100;
+          el.style.setProperty('--x',Math.max(3,Math.min(97,startLeft+dx))+'%');
+          el.style.setProperty('--y',Math.max(8,Math.min(82,startTop+dy))+'%');
+
+          document.querySelectorAll('.office-item.ceo-depth-desk').forEach(desk=>{
+            const r=desk.getBoundingClientRect();
+            const over=e.clientX>=r.left&&e.clientX<=r.right&&e.clientY>=r.top&&e.clientY<=r.bottom;
+            desk.classList.toggle('ceo-drop-target',over);
+          });
+        };
+
+        const up=(e)=>{
+          if(e.pointerId!==pointerId) return;
+          try{el.releasePointerCapture(pointerId)}catch{}
+          el.removeEventListener('pointermove',move);
+          el.removeEventListener('pointerup',up);
+          el.removeEventListener('pointercancel',up);
+
+          if(!dragging) return;
+          el.classList.remove('employee-dragging','ceo-dragging');
+
+          let validDrop=false;
+          document.querySelectorAll('.office-item.ceo-depth-desk').forEach(desk=>{
+            const r=desk.getBoundingClientRect();
+            const over=e.clientX>=r.left&&e.clientX<=r.right&&e.clientY>=r.top&&e.clientY<=r.bottom;
+            desk.classList.remove('ceo-drop-target');
+            if(over) validDrop=true;
+          });
+
+          renderCeoCharacter();
+          if(validDrop) refreshEmployeeDestinations();
+        };
+
+        el.addEventListener('pointermove',move);
+        el.addEventListener('pointerup',up);
+        el.addEventListener('pointercancel',up);
+      });
+
+      host.appendChild(el);
+    }
+
+    el.className='sim-employee ceo-employee seat-facing-down';
+    el.style.setProperty('--x',x+'%');
+    el.style.setProperty('--y',y+'%');
+    el.style.setProperty('--employee-depth',String(1000+Math.round(y*10)));
+    el.querySelector('.employee-status-bubble b').textContent=ceo.name;
+    const character=el.querySelector('.employee-character');
+    character.innerHTML=pixelAvatar(ceo,'idle');
   }
 
 
@@ -774,14 +803,15 @@
       companyUI.selectedEmployeeId = null;
     }
 
-    renderCeoCharacter();
     const visibleEmployees = state.employees.slice(0,9);
     reconcileSeatAssignments();
-    const liveIds = new Set(visibleEmployees.map(e => e.id));
+    const liveIds = new Set(['__ceo__',...visibleEmployees.map(e => e.id)]);
 
     wrap.querySelectorAll('.sim-employee').forEach(el => {
       if (!liveIds.has(el.dataset.id)) el.remove();
     });
+
+    renderCeoCharacter();
 
     visibleEmployees.forEach((employee,index) => {
       const vstate = employeeVisualState(employee);
@@ -1155,7 +1185,7 @@
     updateSelectedEmployeeStyles();
   });
   const version = document.querySelector('.sidebar-foot small');
-  if (version) version.textContent = 'v1.5.5 · Employee Input Fix';
+  if (version) version.textContent = 'v1.5.6 · Unified Character Layer';
 
   try {
     renderOffice = renderCompanyOffice;
