@@ -160,7 +160,7 @@ ipcMain.handle('run-updater', async () => {
     const projectRoot = path.resolve(__dirname, '..'); const updater = path.join(projectRoot, 'UPDATE_AND_RUN.bat');
     if (!fs.existsSync(updater)) return { ok:false, error:'UPDATE_AND_RUN.bat 파일을 찾을 수 없습니다.' };
     if (!fs.existsSync(path.join(projectRoot, '.git'))) return { ok:false, error:'GitHub 연결이 완료되지 않았습니다.' };
-    const child = spawn('cmd.exe', ['/c','start','"AI OFFICE Updater"',updater], { cwd:projectRoot, detached:true, stdio:'ignore', windowsHide:false });
+    const child = spawn('cmd.exe', ['/d','/s','/c', `call "${updater}"`], { cwd:projectRoot, detached:true, stdio:'ignore', windowsHide:false });
     child.unref(); setTimeout(() => app.quit(), 500); return { ok:true };
   } catch (error) { return { ok:false, error:error.message || String(error) }; }
 });
