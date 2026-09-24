@@ -121,3 +121,16 @@
   .ceo-directive-panel{min-height:auto}
   .employee-popover{width:320px;max-height:390px}
 }
+
+/* v0.5.3 Stable dialog report list */
+.report-count{font-size:8px;color:#7f8ca3}
+.recent-report-titles{display:grid;gap:6px}
+.recent-report-title{width:100%;display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center;text-align:left;border:1px solid #263248;background:#0f1520;color:#dce5f8;border-radius:7px;padding:8px 9px;cursor:pointer;font-size:8.5px}
+.recent-report-title:hover,.recent-report-title.active{border-color:#6577ff;background:#161e31}
+.recent-report-title span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.recent-report-title small{color:#748198;font-size:7.5px}
+.recent-report-detail{margin-top:8px;border:1px solid #334158;background:#0b111b;border-radius:8px;padding:9px}
+.recent-report-detail-head{display:flex;justify-content:space-between;gap:8px;align-items:center;margin-bottom:7px}
+.recent-report-detail-head b{font-size:8.5px}
+.close-report-detail{border:0;background:transparent;color:#93a1b7;font-size:8px;cursor:pointer}
+.recent-report-detail pre{margin:0;white-space:pre-wrap;max-height:150px;overflow:auto;color:#cfd8e8;font-family:inherit;font-size:8px;line-height:1.5}
