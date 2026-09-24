@@ -338,3 +338,6 @@
   .game-command-panel{min-height:auto}
   .game-office{min-height:690px}
 }
+
+/* v0.7 asset edition */
+.office-art-background{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:0;pointer-events:none}.game-office .office-skyline,.game-office .office-floor-grid,.game-office .game-room,.game-office .game-zone,.game-office .hallway-decor{opacity:0;pointer-events:none}.asset-staff-sprite{width:82px;height:108px;object-fit:contain;image-rendering:pixelated;filter:drop-shadow(0 5px 3px #0005);transform-origin:center bottom;animation:assetIdle 1.8s steps(2,end) infinite}.asset-staff-sprite.large{width:112px;height:146px}.sim-moving .asset-staff-sprite,.sim-moving-report .asset-staff-sprite{animation:assetWalk .38s steps(2,end) infinite}.sim-working .asset-staff-sprite{animation:assetWork .8s steps(2,end) infinite}@keyframes assetIdle{50%{transform:translateY(-2px)}}@keyframes assetWalk{50%{transform:translateY(-5px) rotate(-1deg)}}@keyframes assetWork{50%{transform:translateY(1px) scale(.99)}}
