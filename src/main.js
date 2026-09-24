@@ -1,5 +1,5 @@
 const { app, BrowserWindow, ipcMain, clipboard, session } = require('electron');
-const { spawn } = require('child_process');
+const { spawn, execFile } = require('child_process');
 const fs = require('fs');
 const path = require('path');
 
@@ -11,6 +11,12 @@ const PROVIDERS = {
 
 const providerWindows = new Map();
 const sleep = (ms) => new Promise(r => setTimeout(r, ms));
+const execFileAsync = (file, args, options = {}) => new Promise((resolve, reject) => {
+  execFile(file, args, { windowsHide:true, maxBuffer: 10 * 1024 * 1024, ...options }, (error, stdout, stderr) => {
+    if (error) { error.stdout = stdout; error.stderr = stderr; reject(error); return; }
+    resolve({ stdout, stderr });
+  });
+});
 
 function createMainWindow() {
   const win = new BrowserWindow({
@@ -156,11 +162,50 @@ ipcMain.handle('clear-subscription-session', async (_event, provider) => {
   } catch (error) { return { ok:false, error:error.message || String(error) }; }
 });
 ipcMain.handle('run-updater', async () => {
+  const projectRoot = path.resolve(__dirname, '..');
+  const logPath = path.join(projectRoot, 'ai-office-update.log');
+  const writeLog = (text) => {
+    try { fs.appendFileSync(logPath, `[${new Date().toISOString()}] ${text}\n`); } catch {}
+  };
+
   try {
-    const projectRoot = path.resolve(__dirname, '..'); const updater = path.join(projectRoot, 'UPDATE_AND_RUN.bat');
-    if (!fs.existsSync(updater)) return { ok:false, error:'UPDATE_AND_RUN.bat 파일을 찾을 수 없습니다.' };
-    if (!fs.existsSync(path.join(projectRoot, '.git'))) return { ok:false, error:'GitHub 연결이 완료되지 않았습니다.' };
-    const child = spawn('cmd.exe', ['/d','/s','/c', `call "${updater}"`], { cwd:projectRoot, detached:true, stdio:'ignore', windowsHide:false });
-    child.unref(); setTimeout(() => app.quit(), 500); return { ok:true };
-  } catch (error) { return { ok:false, error:error.message || String(error) }; }
+    if (!fs.existsSync(path.join(projectRoot, '.git'))) {
+      return { ok:false, error:'GitHub 연결이 완료되지 않았습니다.' };
+    }
+
+    writeLog('Update started');
+
+    const status = await execFileAsync('git.exe', ['status', '--porcelain', '--untracked-files=no'], { cwd:projectRoot });
+    if (status.stdout.trim()) {
+      writeLog('Stopped: local changes detected');
+      return {
+        ok:false,
+        error:'로컬 소스에 수정사항이 있어 자동 업데이트를 중단했습니다. git status를 확인해 주세요.'
+      };
+    }
+
+    writeLog('Running git pull');
+    const pull = await execFileAsync('git.exe', ['pull', '--ff-only', 'origin', 'main'], { cwd:projectRoot });
+    writeLog((pull.stdout || pull.stderr || 'git pull complete').trim());
+
+    writeLog('Running npm install');
+    const npm = process.platform === 'win32' ? 'npm.cmd' : 'npm';
+    const install = await execFileAsync(npm, ['install', '--no-fund', '--no-audit'], { cwd:projectRoot });
+    writeLog((install.stdout || install.stderr || 'npm install complete').trim());
+
+    writeLog('Relaunching app');
+    setTimeout(() => {
+      app.relaunch();
+      app.exit(0);
+    }, 800);
+
+    return { ok:true, message:'업데이트가 완료되었습니다. AI OFFICE를 재시작합니다.' };
+  } catch (error) {
+    const detail = [error.message, error.stderr, error.stdout].filter(Boolean).join('\n').trim();
+    writeLog(`ERROR: ${detail}`);
+    return {
+      ok:false,
+      error:`업데이트 중 오류가 발생했습니다.\n\n${detail || '자세한 내용은 ai-office-update.log를 확인하세요.'}`
+    };
+  }
 });
