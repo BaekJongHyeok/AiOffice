@@ -286,9 +286,8 @@
     wrap.querySelectorAll('.open-project-tasks').forEach(b => b.onclick = () => {
       const id = b.dataset.id;
       showTaskView();
-      document.querySelectorAll('.task-item').forEach(el => {
-        const btn = el.querySelector('[data-id]');
-        const t = btn ? state.tasks.find(x => x.id === btn.dataset.id) : null;
+      document.querySelectorAll('.task-item[data-task-id]').forEach(el => {
+        const t = state.tasks.find(x => x.id === el.dataset.taskId);
         el.style.display = t?.projectId === id ? '' : 'none';
       });
     });
@@ -412,7 +411,7 @@
     originalRenderAll();
     ensureTaskManager();
     ensureTaskButtons();
-    if (document.querySelector('#projectsView')?.classList.contains('active')) renderProjects();
+    renderProjects();
   };
 
   const observer = new MutationObserver(() => {
