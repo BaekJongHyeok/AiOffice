@@ -73,7 +73,7 @@ function renderOffice(){
   state.employees.forEach(e=>{const row=document.createElement('label');row.className='assignee';row.innerHTML=`<input type="checkbox" value="${e.id}"><span>${e.avatar||'🧑‍💼'} ${escapeHtml(e.name)} · ${escapeHtml(e.role)}</span><span class="provider">${providerLabel[e.provider]||e.provider}</span>`;list.appendChild(row)});
   const live=state.tasks.filter(t=>['queued','working','opened'].includes(t.status)); $('#busyCount').textContent=`${live.length}건 대기`;
   const stream=$('#liveTasks');
-  if(!live.length){stream.className='task-stream empty';stream.innerHTML='대기 중인 업무가 없습니다.'}else{stream.className='task-stream';stream.innerHTML=live.slice(0,8).map(t=>`<div class="task-item"><div class="task-top"><b>${escapeHtml(t.employeeName)}</b><span>${t.status==='working'?'⚡ 작업중':t.status==='opened'?'AI 창 열림':'대기 중'}</span></div><div class="task-meta">${providerLabel[t.provider]} · ${escapeHtml(t.task)}</div><div class="mini-actions"><button class="text-btn open-ai" data-id="${t.id}">AI 열기</button><button class="text-btn finish-task" data-id="${t.id}">결과 입력</button></div></div>`).join('')}
+  if(!live.length){stream.className='task-stream empty';stream.innerHTML='대기 중인 업무가 없습니다.'}else{stream.className='task-stream';stream.innerHTML=live.slice(0,8).map(t=>`<div class="task-item" data-task-id="${t.id}"><div class="task-top"><b>${escapeHtml(t.employeeName)}</b><span>${t.status==='working'?'⚡ 작업중':t.status==='opened'?'AI 창 열림':'대기 중'}</span></div><div class="task-meta">${providerLabel[t.provider]} · ${escapeHtml(t.task)}</div><div class="mini-actions"><button class="text-btn open-ai" data-id="${t.id}">AI 열기</button><button class="text-btn finish-task" data-id="${t.id}">결과 입력</button></div></div>`).join('')}
   $$('.open-ai').forEach(b=>b.onclick=()=>openTaskInProvider(b.dataset.id));
   $$('.finish-task').forEach(b=>b.onclick=()=>openResultModal(b.dataset.id));
   const recent=state.reports.slice(0,3);const rr=$('#recentReports');
@@ -99,7 +99,7 @@ function renderTasks(){
 }
 function taskCard(t){
   const actions=t.status==='done'?'':`<div class="mini-actions"><button class="text-btn board-open" data-id="${t.id}">AI 열기</button><button class="text-btn board-copy" data-id="${t.id}">프롬프트 복사</button><button class="text-btn board-finish" data-id="${t.id}">결과 입력</button></div>`;
-  return `<div class="task-item"><div class="task-top"><b>${escapeHtml(t.employeeName)}</b><span>${t.status==='queued'?'대기':t.status==='working'?'⚡ 작업중':t.status==='opened'?(t.automationError?'⚠ 자동화 실패':'AI 창 열림'):'완료'}</span></div><div class="task-meta">${providerLabel[t.provider]||t.provider} · ${escapeHtml(t.task)}</div>${t.automationError?`<div class="task-error">${escapeHtml(t.automationError)}</div>`:''}${actions}</div>`;
+  return `<div class="task-item" data-task-id="${t.id}"><div class="task-top"><b>${escapeHtml(t.employeeName)}</b><span>${t.status==='queued'?'대기':t.status==='working'?'⚡ 작업중':t.status==='opened'?(t.automationError?'⚠ 자동화 실패':'AI 창 열림'):'완료'}</span></div><div class="task-meta">${providerLabel[t.provider]||t.provider} · ${escapeHtml(t.task)}</div>${t.automationError?`<div class="task-error">${escapeHtml(t.automationError)}</div>`:''}${actions}</div>`;
 }
 
 function renderReports(){
