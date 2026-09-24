@@ -728,3 +728,39 @@ body{overflow:hidden}.app-shell{height:100vh;min-height:0;overflow:hidden}main{h
 .layout-editing .office-item.pixel-furniture{z-index:50!important}
 .layout-editing .office-item.dragging{z-index:99!important}
 .layout-editing .depth-desk .furniture-front-image{z-index:2!important}
+
+/* v1.3.4 recent activity safe zone */
+.game-office{
+  padding-bottom:92px!important;
+}
+.game-office .office-activity,
+.game-office .game-activity{
+  left:18px!important;
+  right:18px!important;
+  bottom:12px!important;
+  width:auto!important;
+  min-height:64px!important;
+  max-height:78px!important;
+  overflow:hidden!important;
+  z-index:5000!important;
+  pointer-events:auto!important;
+  backdrop-filter:blur(8px)!important;
+}
+.game-office .office-activity>div,
+.game-office .game-activity>div{
+  margin-top:3px!important;
+}
+.game-office .sim-employees{
+  bottom:90px!important;
+}
+.game-office .office-furniture{
+  bottom:90px!important;
+}
+.game-office .editable-office-floor{
+  bottom:90px!important;
+}
+.layout-editing .game-activity,
+.layout-editing .office-activity{
+  opacity:.28!important;
+  pointer-events:none!important;
+}
