@@ -12,15 +12,15 @@
   };
 
   const furnitureCatalog = {
-    'ceo-desk':{label:'CEO 책상',col:0,row:0,w:26,h:23},
-    'workstation-4p':{label:'4인 워크스테이션',col:1,row:0,w:24,h:22},
-    'desk-2p':{label:'2인 책상',col:2,row:0,w:22,h:20},
-    'meeting-table':{label:'회의 테이블',col:0,row:1,w:25,h:20},
-    'cafe-table':{label:'카페 테이블',col:1,row:1,w:18,h:18},
-    'bookshelf':{label:'책장',col:2,row:1,w:16,h:22},
-    'server-rack':{label:'서버 랙',col:0,row:2,w:14,h:24},
-    'office-corner':{label:'정수기/서류함',col:1,row:2,w:14,h:20},
-    'plant-set':{label:'화분 세트',col:2,row:2,w:12,h:18},
+    'ceo-desk':{label:'CEO 책상',w:26,h:23},
+    'workstation-4p':{label:'4인 워크스테이션',w:24,h:22},
+    'desk-2p':{label:'2인 책상',w:22,h:20},
+    'meeting-table':{label:'회의 테이블',w:25,h:20},
+    'cafe-table':{label:'카페 테이블',w:18,h:18},
+    'bookshelf':{label:'책장',w:16,h:22},
+    'server-rack':{label:'서버 랙',w:14,h:24},
+    'office-corner':{label:'정수기/서류함',w:14,h:20},
+    'plant-set':{label:'화분 세트',w:12,h:18},
   };
   const defaultFurniture = [
     {id:'ceo',type:'ceo-desk',x:6,y:7,...furnitureCatalog['ceo-desk']},
@@ -208,7 +208,7 @@
     host.innerHTML=furniture.map(item=>{
       const preset=furnitureCatalog[item.type]||item;
       return `<button class="office-item pixel-furniture ${companyUI.selectedFurnitureId===item.id?'selected':''}" data-id="${item.id}" style="left:${item.x}%;top:${item.y}%;width:${item.w}%;height:${item.h}%">
-        <span class="furniture-sprite" style="--fx:${preset.col};--fy:${preset.row};background-image:url('${window.AIOFFICE_FURNITURE_ATLAS||''}')"></span>
+        <img class="furniture-sprite" src="${window.AIOFFICE_FURNITURE_ASSETS?.[item.type]||''}" alt="${preset.label||item.type}" draggable="false">
         <em>${preset.label||item.label||item.type}</em>
       </button>`;
     }).join('');
