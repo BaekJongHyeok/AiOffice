@@ -1078,7 +1078,7 @@
     updateSelectedEmployeeStyles();
   });
   const version = document.querySelector('.sidebar-foot small');
-  if (version) version.textContent = 'v1.7.0 · AI Model Profiles';
+  if (version) version.textContent = 'v1.7.1 · Modal Buttons Fix';
 
   try {
     renderOffice = renderCompanyOffice;
