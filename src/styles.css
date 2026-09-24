@@ -788,3 +788,29 @@ body{overflow:hidden}.app-shell{height:100vh;min-height:0;overflow:hidden}main{h
 .seat-pin.assigned{background:#31b56a;box-shadow:0 0 0 3px #31b56a55,0 2px 8px #0008}
 .layout-editing.seat-assigning .office-item{pointer-events:auto!important}
 .layout-editing.seat-assigning .furniture-front-image{pointer-events:none!important}
+
+/* v1.4.1 drag employee -> desk assignment */
+.seat-assign-panel,.seat-pin{display:none!important}
+.seat-drag-help{
+  padding:6px 9px;border:1px solid #6d7f98;border-radius:6px;
+  background:#eef5ff;color:#26364a;font-size:10px;font-weight:700;
+}
+.layout-editing .sim-employees{pointer-events:auto!important;opacity:1!important}
+.layout-editing .sim-employee{
+  pointer-events:auto!important;cursor:grab!important;touch-action:none!important;
+  opacity:1!important;
+}
+.layout-editing .sim-employee:active,
+.layout-editing .sim-employee.employee-dragging{cursor:grabbing!important}
+.layout-editing .sim-employee.employee-dragging{
+  z-index:9000!important;filter:drop-shadow(0 12px 12px #0008) brightness(1.08)!important;
+  transition:none!important;
+}
+.layout-editing .office-item.depth-desk{
+  transition:filter .12s ease,outline-color .12s ease!important;
+}
+.layout-editing .office-item.depth-desk.employee-drop-target{
+  outline:4px solid #4ea1ff!important;
+  outline-offset:5px!important;
+  filter:brightness(1.18) drop-shadow(0 0 12px #4ea1ffaa)!important;
+}
