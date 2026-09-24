@@ -23,57 +23,10 @@
   };
 
   function pixelAvatar(employee, status='idle', large=false) {
-    const p = rolePalette(employee);
-    const styleKey = employee.spriteStyle || 'auto';
-    const combined = `${employee.department} ${employee.role}`.toLowerCase();
-    const resolvedStyle =
-      styleKey !== 'auto' ? styleKey :
-      /마케팅|콘텐츠/.test(combined) ? 'marketing' :
-      /개발|엔지니어|코드/.test(combined) ? 'development' :
-      /디자인/.test(combined) ? 'design' :
-      /분석|데이터|리서치/.test(combined) ? 'analysis' :
-      /qa|검수|품질/.test(combined) ? 'qa' :
-      /팀장|대표|ceo/.test(`${employee.rank} ${employee.role}`.toLowerCase()) ? 'leader' :
-      'planning';
-
-    const hair = employee.id ? ['#5a3427','#242531','#6a3d2f','#233044','#2e291f'][Math.abs(hashCode(employee.id)) % 5] : '#38251c';
-    const skin = ['#f4c4a3','#edb892','#f0c09f'][Math.abs(hashCode(employee.id+'skin')) % 3];
-    const glasses = ['development','analysis','qa'].includes(resolvedStyle);
-    const cls = large ? 'rpg-pixel-avatar large' : 'rpg-pixel-avatar';
-
-    return `
-      <div class="${cls} role-${resolvedStyle} state-${status}" style="--role:${p.main};--role-dark:${p.dark};--hair:${hair};--skin:${skin};--accent:${p.accent}">
-        <span class="rpg-shadow"></span>
-        <span class="rpg-leg left"></span>
-        <span class="rpg-leg right"></span>
-        <span class="rpg-shoe left"></span>
-        <span class="rpg-shoe right"></span>
-        <span class="rpg-body"></span>
-        <span class="rpg-shirt"></span>
-        <span class="rpg-tie"></span>
-        <span class="rpg-arm left"></span>
-        <span class="rpg-arm right"></span>
-        <span class="rpg-hand left"></span>
-        <span class="rpg-hand right"></span>
-        <span class="rpg-neck"></span>
-        <span class="rpg-head"></span>
-        <span class="rpg-ear left"></span>
-        <span class="rpg-ear right"></span>
-        <span class="rpg-hair back"></span>
-        <span class="rpg-hair top"></span>
-        <span class="rpg-hair fringe"></span>
-        <span class="rpg-eye left"></span>
-        <span class="rpg-eye right"></span>
-        <span class="rpg-brow left"></span>
-        <span class="rpg-brow right"></span>
-        <span class="rpg-mouth"></span>
-        ${glasses ? '<span class="rpg-glasses"></span>' : ''}
-        <span class="rpg-id-badge"></span>
-        <span class="rpg-role-item"></span>
-        <span class="rpg-role-item-detail"></span>
-      </div>`;
+    const role = employeeRoleType(employee);
+    const src = `assets/staff/${role}.svg`;
+    return `<img class="asset-staff-sprite ${large?'large':''} state-${status}" src="${src}" alt="${escapeHtml(employee.name||role)}" draggable="false">`;
   }
-
 
   function hashCode(str='') {
     let h=0; for(let i=0;i<str.length;i++) h=((h<<5)-h)+str.charCodeAt(i)|0; return h;
@@ -135,6 +88,7 @@
 
       <div class="company-layout game-company-layout">
         <section class="sim-office card game-office">
+          <img class="office-art-background" src="assets/office/office-v07.svg" alt="" draggable="false">
           <div class="office-skyline"></div>
           <div class="office-floor-grid"></div>
 
