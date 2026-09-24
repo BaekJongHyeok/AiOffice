@@ -118,7 +118,7 @@
   function pixelAvatar(employee, status='idle', large=false) {
     const resolvedStyle = employeeRoleType(employee);
     const frameState =
-      ['moving','moving-report'].includes(status) ? 'moving' :
+      ['moving','moving-report','moving-meeting','moving-ceo','returning'].includes(status) ? 'moving' :
       status === 'working' ? 'working' :
       status === 'meeting' ? 'meeting' :
       ['reporting','ceo-report'].includes(status) ? 'reporting' :
@@ -138,39 +138,66 @@
   }
 
   function recentDoneTask(employeeId) {
-    return state.tasks.find(t => t.employeeId === employeeId && t.status === 'done' && Date.now() - (t.finishedAt || 0) < 20000);
+    return state.tasks.find(t => t.employeeId === employeeId && t.status === 'done' && Date.now() - (t.finishedAt || 0) < 18000);
   }
 
   function employeeVisualState(employee) {
     const task = activeTask(employee.id);
     const done = recentDoneTask(employee.id);
+
     if (done) {
-      const elapsed = Date.now() - done.finishedAt;
-      if (done.taskType === 'project-final') return elapsed < 11000 ? 'ceo-report' : 'done';
-      return elapsed < 7000 ? 'moving-report' : elapsed < 14000 ? 'reporting' : 'done';
+      const elapsed = Date.now() - (done.finishedAt || Date.now());
+
+      if (done.taskType === 'project-final') {
+        if (elapsed < 3500) return 'moving-ceo';
+        if (elapsed < 9000) return 'ceo-report';
+        if (elapsed < 12500) return 'returning';
+        return 'done';
+      }
+
+      if (elapsed < 3500) return 'moving-report';
+      if (elapsed < 8500) return 'reporting';
+      if (elapsed < 12000) return 'returning';
+      return 'done';
     }
+
     if (!task) return 'idle';
-    if (task.status === 'queued') return 'moving';
     if (task.status === 'opened' && task.automationError) return 'blocked';
 
-    const elapsed = Date.now() - (task.automationStartedAt || task.startedAt || Date.now());
+    const startedAt = task.automationStartedAt || task.startedAt || task.createdAt || Date.now();
+    const elapsed = Date.now() - startedAt;
     const project = task.projectId ? state.projects.find(p => p.id === task.projectId) : null;
     const coworkers = project ? project.taskIds
       .map(id => state.tasks.find(t => t.id === id))
       .filter(t => t && ['queued','working','opened'].includes(t.status)).length : 0;
 
-    if (task.taskType === 'project-final') return 'ceo-report';
-    if (project && coworkers >= 2 && elapsed > 7000 && elapsed < 18000) return 'meeting';
+    if (task.taskType === 'project-final') {
+      if (elapsed < 3000) return 'moving';
+      return task.status === 'working' ? 'working' : 'moving';
+    }
+
+    if (task.status === 'queued') return 'moving';
+    if (elapsed < 3000) return 'moving';
+
+    if (project && coworkers >= 2) {
+      if (elapsed >= 7000 && elapsed < 12500) return 'moving-meeting';
+      if (elapsed >= 12500 && elapsed < 19000) return 'meeting';
+      if (elapsed >= 19000 && elapsed < 22500) return 'returning';
+    }
+
     return task.status === 'working' ? 'working' : 'moving';
   }
 
   const statusMeta = {
     idle: ['자리 비움','휴식/대기','○'],
-    moving: ['이동 중','업무 자리로 이동','🚶'],
+    moving: ['자리로 이동 중','업무 자리로 이동','🚶'],
     working: ['근무 중','업무 수행 중','●'],
+    'moving-meeting': ['회의실 이동 중','회의실로 이동','🚶'],
     meeting: ['회의 중','프로젝트 회의','👥'],
-    'moving-report': ['이동 중','팀장에게 보고하러 이동','🚶'],
+    returning: ['자리 복귀 중','자기 자리로 복귀','↩'],
+    'moving-report': ['보고 이동 중','팀장에게 보고하러 이동','🚶'],
     reporting: ['보고 중','팀장에게 결과 보고','📨'],
+    'moving-ceo': ['CEO실 이동 중','CEO에게 최종 보고하러 이동','🚶'],
     'ceo-report': ['최종 보고 중','CEO에게 최종 보고','👑'],
     done: ['업무 완료','업무 완료','✓'],
     blocked: ['확인 필요','자동화 확인 필요','!'],
@@ -547,9 +574,15 @@
 
   function employeePlacement(employee,index,visualState) {
     const home=homeSeatForEmployee(employee,index);
-    if(visualState==='meeting') return {point:meetingSeatForEmployee(employee,index),facing:'down',seated:false};
-    if(visualState==='reporting'||visualState==='moving-report') return {point:managerReportPoint(),facing:'down',seated:false};
-    if(visualState==='ceo-report') return {point:ceoReportPoint(),facing:'down',seated:false};
+    if(visualState==='moving-meeting'||visualState==='meeting') {
+      return {point:meetingSeatForEmployee(employee,index),facing:'down',seated:false};
+    }
+    if(visualState==='reporting'||visualState==='moving-report') {
+      return {point:managerReportPoint(),facing:'down',seated:false};
+    }
+    if(visualState==='moving-ceo'||visualState==='ceo-report') {
+      return {point:ceoReportPoint(),facing:'down',seated:false};
+    }
     return {point:home.point,facing:home.facing||'up',seated:false};
   }
 
@@ -946,7 +979,7 @@
     updateSelectedEmployeeStyles();
   });
   const version = document.querySelector('.sidebar-foot small');
-  if (version) version.textContent = 'v1.4.2 · Direct Employee Drag';
+  if (version) version.textContent = 'v1.5.0 · Workflow Movement';
 
   try {
     renderOffice = renderCompanyOffice;

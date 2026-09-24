@@ -834,3 +834,21 @@ body{overflow:hidden}.app-shell{height:100vh;min-height:0;overflow:hidden}main{h
   outline-offset:5px!important;
   filter:brightness(1.18) drop-shadow(0 0 12px #4ea1ffaa)!important;
 }
+
+/* v1.5 workflow movement states */
+.game-office .sim-moving-meeting .employee-character,
+.game-office .sim-moving-ceo .employee-character,
+.game-office .sim-returning .employee-character{
+  animation:walkBob .35s infinite alternate!important;
+}
+.game-office .status-dot-mini.moving-meeting,
+.game-office .status-dot-mini.moving-ceo,
+.game-office .status-dot-mini.returning{
+  background:#67a7ff!important;
+  box-shadow:0 0 8px #67a7ffaa!important;
+}
+.game-office .sim-moving-meeting .employee-status-bubble,
+.game-office .sim-moving-ceo .employee-status-bubble,
+.game-office .sim-returning .employee-status-bubble{
+  border-color:#4e84c9!important;
+}
