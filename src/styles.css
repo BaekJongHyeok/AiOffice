@@ -338,3 +338,89 @@
   .game-command-panel{min-height:auto}
   .game-office{min-height:690px}
 }
+
+/* v0.7 Asset-based Pixel Office */
+.game-office{
+  background-image:url('assets/office-background.webp')!important;
+  background-size:cover!important;
+  background-position:center center!important;
+  background-repeat:no-repeat!important;
+  min-height:690px!important;
+  border:3px solid #6d5947!important;
+  box-shadow:0 16px 38px #0006!important;
+}
+.game-office:before,.game-office:after{display:none!important}
+.game-office>.office-skyline,
+.game-office>.office-floor-grid,
+.game-office>.game-room,
+.game-office>.game-zone,
+.game-office>.hallway-decor{display:none!important}
+.game-office .sim-employees{position:absolute;inset:0;z-index:5}
+.game-office .sim-employee{
+  width:128px;height:126px;
+  filter:drop-shadow(0 5px 3px #0007);
+}
+.game-office .employee-character{
+  top:34px;
+  width:80px;height:80px;
+  display:grid;place-items:center;
+}
+.asset-pixel-avatar{
+  position:relative;
+  width:80px;height:80px;
+  image-rendering:pixelated;
+  transform-origin:center bottom;
+}
+.asset-pixel-avatar.large{
+  transform:scale(1.22);
+}
+.asset-pixel-avatar .asset-sprite{
+  position:absolute;
+  inset:0;
+  width:80px;height:80px;
+  background-image:url('assets/staff-atlas.webp');
+  background-repeat:no-repeat;
+  background-size:560px 80px;
+  image-rendering:pixelated;
+  filter:drop-shadow(0 4px 2px #0005);
+}
+.asset-pixel-avatar.role-planning .asset-sprite{background-position:0 0}
+.asset-pixel-avatar.role-marketing .asset-sprite{background-position:-80px 0}
+.asset-pixel-avatar.role-development .asset-sprite{background-position:-160px 0}
+.asset-pixel-avatar.role-design .asset-sprite{background-position:-240px 0}
+.asset-pixel-avatar.role-analysis .asset-sprite{background-position:-320px 0}
+.asset-pixel-avatar.role-qa .asset-sprite{background-position:-400px 0}
+.asset-pixel-avatar.role-leader .asset-sprite{background-position:-480px 0}
+.asset-pixel-avatar.state-working{animation:assetWork .55s steps(2,end) infinite alternate}
+.asset-pixel-avatar.state-moving{animation:assetWalk .38s steps(2,end) infinite alternate}
+.asset-pixel-avatar.state-meeting{animation:assetTalk .62s steps(2,end) infinite alternate}
+.asset-pixel-avatar.state-reporting{animation:assetReport .7s steps(2,end) infinite alternate}
+.asset-pixel-avatar.state-done{animation:assetDone .8s ease-out 2}
+@keyframes assetWork{to{transform:translateY(1px)}}
+@keyframes assetWalk{to{transform:translateY(-4px) rotate(-1deg)}}
+@keyframes assetTalk{to{transform:translateY(-2px) rotate(1deg)}}
+@keyframes assetReport{to{transform:translateY(-2px) scale(1.02)}}
+@keyframes assetDone{50%{filter:brightness(1.14) drop-shadow(0 0 8px #54d993)}}
+.game-office .employee-status-bubble{
+  top:-2px;
+  min-width:118px;
+  background:#132237eb;
+  border:2px solid #203957;
+  box-shadow:0 4px 0 #0007;
+}
+.game-office .employee-task-caption{
+  bottom:-2px;
+  background:#15253ae8;
+  border:2px solid #0c1928;
+  color:#eef5ff;
+  padding:4px 6px;
+}
+.game-office .sim-employee.selected .employee-character{
+  filter:drop-shadow(0 0 7px #5ca6ff) drop-shadow(0 0 14px #5ca6ffaa);
+}
+.game-office .popover-avatar .asset-pixel-avatar{
+  transform:scale(.92);
+}
+.game-office .popover-avatar .asset-pixel-avatar.large{
+  transform:scale(1.06);
+}
