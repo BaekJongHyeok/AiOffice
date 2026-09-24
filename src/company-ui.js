@@ -11,22 +11,33 @@
     selectedFurnitureId: null,
   };
 
+  const furnitureCatalog = {
+    'ceo-desk':{label:'CEO 책상',col:0,row:0,w:26,h:23},
+    'workstation-4p':{label:'4인 워크스테이션',col:1,row:0,w:24,h:22},
+    'desk-2p':{label:'2인 책상',col:2,row:0,w:22,h:20},
+    'meeting-table':{label:'회의 테이블',col:0,row:1,w:25,h:20},
+    'cafe-table':{label:'카페 테이블',col:1,row:1,w:18,h:18},
+    'bookshelf':{label:'책장',col:2,row:1,w:16,h:22},
+    'server-rack':{label:'서버 랙',col:0,row:2,w:14,h:24},
+    'office-corner':{label:'정수기/서류함',col:1,row:2,w:14,h:20},
+    'plant-set':{label:'화분 세트',col:2,row:2,w:12,h:18},
+  };
   const defaultFurniture = [
-    {id:'desk-a',type:'desk',label:'책상',x:10,y:43,w:22,h:12},
-    {id:'desk-b',type:'desk',label:'책상',x:36,y:43,w:22,h:12},
-    {id:'desk-c',type:'desk',label:'책상',x:10,y:67,w:22,h:12},
-    {id:'desk-d',type:'desk',label:'책상',x:36,y:67,w:22,h:12},
-    {id:'meeting',type:'meeting',label:'회의 테이블',x:50,y:8,w:28,h:18},
-    {id:'sofa',type:'sofa',label:'소파',x:8,y:12,w:24,h:12},
-    {id:'server',type:'server',label:'서버 랙',x:82,y:7,w:12,h:20},
-    {id:'shelf',type:'shelf',label:'책장',x:69,y:42,w:12,h:14},
-    {id:'plant-a',type:'plant',label:'화분',x:63,y:34,w:5,h:8},
-    {id:'plant-b',type:'plant',label:'화분',x:78,y:72,w:5,h:8},
-    {id:'lounge',type:'table',label:'휴게 테이블',x:68,y:82,w:18,h:12},
+    {id:'ceo',type:'ceo-desk',x:6,y:7,...furnitureCatalog['ceo-desk']},
+    {id:'meet',type:'meeting-table',x:43,y:6,...furnitureCatalog['meeting-table']},
+    {id:'server',type:'server-rack',x:83,y:7,...furnitureCatalog['server-rack']},
+    {id:'ws-a',type:'workstation-4p',x:8,y:42,...furnitureCatalog['workstation-4p']},
+    {id:'ws-b',type:'desk-2p',x:35,y:43,...furnitureCatalog['desk-2p']},
+    {id:'ws-c',type:'desk-2p',x:8,y:68,...furnitureCatalog['desk-2p']},
+    {id:'ws-d',type:'workstation-4p',x:35,y:68,...furnitureCatalog['workstation-4p']},
+    {id:'shelf',type:'bookshelf',x:68,y:40,...furnitureCatalog['bookshelf']},
+    {id:'corner',type:'office-corner',x:82,y:60,...furnitureCatalog['office-corner']},
+    {id:'lounge',type:'cafe-table',x:67,y:79,...furnitureCatalog['cafe-table']},
+    {id:'plant',type:'plant-set',x:58,y:50,...furnitureCatalog['plant-set']},
   ];
-  const loadFurniture=()=>{try{return JSON.parse(localStorage.getItem('aiOfficeFurnitureV1'))||defaultFurniture}catch{return defaultFurniture}};
+  const loadFurniture=()=>{try{return JSON.parse(localStorage.getItem('aiOfficeFurnitureV2'))||defaultFurniture.map(x=>({...x}))}catch{return defaultFurniture.map(x=>({...x}))}};
   let furniture=loadFurniture();
-  const saveFurniture=()=>localStorage.setItem('aiOfficeFurnitureV1',JSON.stringify(furniture));
+  const saveFurniture=()=>localStorage.setItem('aiOfficeFurnitureV2',JSON.stringify(furniture));
 
   const rolePalette = (employee) => {
     const style = employee.spriteStyle || 'auto';
@@ -120,7 +131,7 @@
           <div class="layout-editor-bar">
             <button id="layoutEditBtn" class="layout-edit-btn">✥ 배치 편집</button>
             <div id="layoutTools" class="layout-tools">
-              <button data-add="desk">+ 책상</button><button data-add="sofa">+ 소파</button><button data-add="plant">+ 화분</button><button data-add="shelf">+ 책장</button><button data-add="table">+ 테이블</button>
+              <button data-add="desk-2p">+ 2인 책상</button><button data-add="workstation-4p">+ 4인 책상</button><button data-add="meeting-table">+ 회의 테이블</button><button data-add="cafe-table">+ 카페 테이블</button><button data-add="bookshelf">+ 책장</button><button data-add="server-rack">+ 서버랙</button><button data-add="plant-set">+ 화분</button>
               <button id="layoutDeleteBtn">삭제</button><button id="layoutResetBtn">초기화</button><button id="layoutDoneBtn" class="primary">완료</button>
             </div>
           </div>
@@ -173,7 +184,7 @@
     const editBtn=document.querySelector('#layoutEditBtn'), tools=document.querySelector('#layoutTools');
     editBtn?.addEventListener('click',()=>{companyUI.layoutEdit=true;document.querySelector('.game-office')?.classList.add('layout-editing');tools?.classList.add('show');editBtn.style.display='none';renderFurniture()});
     document.querySelector('#layoutDoneBtn')?.addEventListener('click',()=>{companyUI.layoutEdit=false;companyUI.selectedFurnitureId=null;document.querySelector('.game-office')?.classList.remove('layout-editing');tools?.classList.remove('show');if(editBtn)editBtn.style.display='';saveFurniture();renderFurniture()});
-    tools?.querySelectorAll('[data-add]').forEach(btn=>btn.addEventListener('click',()=>{const type=btn.dataset.add;furniture.push({id:'f-'+Date.now(),type,label:btn.textContent.replace('+ ','') ,x:44,y:55,w:type==='plant'?5:16,h:type==='plant'?8:11});saveFurniture();renderFurniture()}));
+    tools?.querySelectorAll('[data-add]').forEach(btn=>btn.addEventListener('click',()=>{const type=btn.dataset.add;const preset=furnitureCatalog[type];if(!preset)return;furniture.push({id:'f-'+Date.now(),type,x:44,y:55,...preset});saveFurniture();renderFurniture()}));
     document.querySelector('#layoutDeleteBtn')?.addEventListener('click',()=>{if(!companyUI.selectedFurnitureId)return;furniture=furniture.filter(x=>x.id!==companyUI.selectedFurnitureId);companyUI.selectedFurnitureId=null;saveFurniture();renderFurniture()});
     document.querySelector('#layoutResetBtn')?.addEventListener('click',()=>{furniture=defaultFurniture.map(x=>({...x}));companyUI.selectedFurnitureId=null;saveFurniture();renderFurniture()});
 
@@ -194,7 +205,13 @@
 
   function renderFurniture(){
     const host=document.querySelector('#officeFurniture'); if(!host)return;
-    host.innerHTML=furniture.map(item=>`<button class="office-item item-${item.type} ${companyUI.selectedFurnitureId===item.id?'selected':''}" data-id="${item.id}" style="left:${item.x}%;top:${item.y}%;width:${item.w}%;height:${item.h}%"><span>${item.label}</span></button>`).join('');
+    host.innerHTML=furniture.map(item=>{
+      const preset=furnitureCatalog[item.type]||item;
+      return `<button class="office-item pixel-furniture ${companyUI.selectedFurnitureId===item.id?'selected':''}" data-id="${item.id}" style="left:${item.x}%;top:${item.y}%;width:${item.w}%;height:${item.h}%">
+        <span class="furniture-sprite" style="--fx:${preset.col};--fy:${preset.row};background-image:url('${window.AIOFFICE_FURNITURE_ATLAS||''}')"></span>
+        <em>${preset.label||item.label||item.type}</em>
+      </button>`;
+    }).join('');
     host.querySelectorAll('.office-item').forEach(el=>{
       el.onclick=(ev)=>{if(!companyUI.layoutEdit)return;ev.stopPropagation();companyUI.selectedFurnitureId=el.dataset.id;renderFurniture()};
       el.onpointerdown=(ev)=>{
@@ -538,7 +555,7 @@
     updateSelectedEmployeeStyles();
   });
   const version = document.querySelector('.sidebar-foot small');
-  if (version) version.textContent = 'v0.8.0 · Layout Editor';
+  if (version) version.textContent = 'v0.9.0 · Pixel Furniture';
 
   try {
     renderOffice = renderCompanyOffice;
