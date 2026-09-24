@@ -320,7 +320,6 @@
     `;
 
     renderFurniture();
-    renderCeoCharacter();
 
     const ceoModal=document.querySelector('#ceoProfileModal');
     const ceoOpen=document.querySelector('#ceoSettingsBtn');
@@ -341,7 +340,6 @@
         spriteStyle:ceoSprite?.value||'leader'
       };
       saveCeoProfile();
-      renderCeoCharacter();
       closeCeo();
     });
 
@@ -1084,7 +1082,7 @@
     updateSelectedEmployeeStyles();
   });
   const version = document.querySelector('.sidebar-foot small');
-  if (version) version.textContent = 'v1.6.3 · CEO Rebuilt As Employee';
+  if (version) version.textContent = 'v1.6.4 · Character Render Fix';
 
   try {
     renderOffice = renderCompanyOffice;
