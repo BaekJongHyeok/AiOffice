@@ -1098,3 +1098,30 @@ body{overflow:hidden}.app-shell{height:100vh;min-height:0;overflow:hidden}main{h
 .game-office .ceo-employee .employee-task-caption{
   display:none!important;
 }
+
+/* v1.6.1 CEO uses EXACT same geometry as normal employees */
+.game-office .ceo-employee{
+  width:156px!important;
+  height:156px!important;
+  transform:translate(-50%,-68%)!important;
+}
+.game-office .ceo-employee .employee-character{
+  top:34px!important;
+  left:50%!important;
+  width:112px!important;
+  height:112px!important;
+  transform:translateX(-50%)!important;
+}
+.game-office .ceo-employee .employee-status-bubble{
+  top:18px!important;
+  left:50%!important;
+  transform:translateX(-50%)!important;
+  margin:0!important;
+  min-width:78px!important;
+  max-width:122px!important;
+  padding:3px 6px!important;
+  line-height:1.05!important;
+}
+.game-office .ceo-employee .employee-task-caption{
+  display:none!important;
+}
