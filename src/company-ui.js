@@ -154,7 +154,6 @@
       setTimeout(() => switchView('office'), 20);
     };
   }
-  }
 
   function employeePosition(index, visualState) {
     const deskPositions = [
