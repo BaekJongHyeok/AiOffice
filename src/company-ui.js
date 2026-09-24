@@ -263,8 +263,10 @@
     const host=document.querySelector('#officeFurniture'); if(!host)return;
     host.innerHTML=furniture.map(item=>{
       const preset=furnitureCatalog[item.type]||item;
-      return `<button type="button" class="office-item pixel-furniture ${companyUI.selectedFurnitureId===item.id?'selected':''}" data-id="${item.id}" aria-label="${preset.label||item.type}" style="left:${item.x}%;top:${item.y}%;width:${item.w}%;height:${item.h}%">
-        <img class="furniture-sprite real-furniture-image" src="assets/furniture/${item.type}.png" alt="" draggable="false">
+      const isDesk=['desk-1p','desk-2p','workstation-4p'].includes(item.type);
+      return `<button type="button" class="office-item pixel-furniture ${isDesk?'depth-desk':''} ${companyUI.selectedFurnitureId===item.id?'selected':''}" data-id="${item.id}" aria-label="${preset.label||item.type}" style="left:${item.x}%;top:${item.y}%;width:${item.w}%;height:${item.h}%">
+        <img class="furniture-sprite real-furniture-image furniture-base-image" src="assets/furniture/${item.type}.png" alt="" draggable="false">
+        ${isDesk ? '<img class="furniture-sprite real-furniture-image furniture-front-image" src="assets/furniture/'+item.type+'.png" alt="" draggable="false">' : ''}
         <em>${preset.label||item.label||item.type}</em>
       </button>`;
     }).join('');
@@ -349,17 +351,17 @@
     const x=item.x,y=item.y,w=item.w,h=item.h;
     const spot=(rx,ry,facing='up')=>({point:clampOfficePoint([x+w*rx,y+h*ry]),facing});
     if(item.type==='desk-1p') return [
-      spot(.50,1.04,'up'),
+      spot(.50,.93,'up'),
     ];
     if(item.type==='desk-2p') return [
-      spot(.28,1.04,'up'),
-      spot(.72,1.04,'up'),
+      spot(.28,.93,'up'),
+      spot(.72,.93,'up'),
     ];
     if(item.type==='workstation-4p') return [
-      spot(.24,1.02,'up'),
-      spot(.43,1.02,'up'),
-      spot(.62,1.02,'up'),
-      spot(.81,1.02,'up'),
+      spot(.24,.92,'up'),
+      spot(.43,.92,'up'),
+      spot(.62,.92,'up'),
+      spot(.81,.92,'up'),
     ];
     return [];
   }
@@ -477,6 +479,7 @@
       el.dataset.facing = placement.facing || 'up';
       el.style.setProperty('--x', `${pos[0]}%`);
       el.style.setProperty('--y', `${pos[1]}%`);
+      el.style.setProperty('--employee-depth', String(1000+Math.round(pos[1]*10)));
 
       const dot = el.querySelector('.status-dot-mini');
       dot.className = `status-dot-mini ${vstate}`;
@@ -718,7 +721,7 @@
     updateSelectedEmployeeStyles();
   });
   const version = document.querySelector('.sidebar-foot small');
-  if (version) version.textContent = 'v1.2.3 · Desk Position Fix';
+  if (version) version.textContent = 'v1.3.0 · Depth & Scale';
 
   try {
     renderOffice = renderCompanyOffice;
