@@ -24,6 +24,7 @@ const state = {
   employees: migrateEmployees(JSON.parse(localStorage.getItem('aiOffice.employees') || 'null')),
   tasks: JSON.parse(localStorage.getItem('aiOffice.tasks') || '[]').map(t => t.status === 'working' ? {...t, status:'queued'} : t),
   reports: JSON.parse(localStorage.getItem('aiOffice.reports') || '[]'),
+  projects: JSON.parse(localStorage.getItem('aiOffice.projects') || '[]'),
   editingId: null,
   resultTaskId: null,
   sessionInfo: {},
@@ -33,6 +34,7 @@ function persist(){
   localStorage.setItem('aiOffice.employees', JSON.stringify(state.employees));
   localStorage.setItem('aiOffice.tasks', JSON.stringify(state.tasks.slice(0,150)));
   localStorage.setItem('aiOffice.reports', JSON.stringify(state.reports.slice(0,150)));
+  localStorage.setItem('aiOffice.projects', JSON.stringify(state.projects.slice(0,100)));
   localStorage.removeItem('aiOffice.settings');
 }
 
@@ -176,7 +178,7 @@ function saveResult(){
   const t=state.tasks.find(x=>x.id===state.resultTaskId); if(!t) return;
   const result=$('#resultText').value.trim(); if(!result){alert('AI 결과를 붙여넣으세요.');return}
   t.status='done';t.finishedAt=Date.now();
-  state.reports.unshift({id:uid(),employeeId:t.employeeId,employeeName:t.employeeName,department:t.department,provider:t.provider,task:t.task,result,createdAt:Date.now()});
+  state.reports.unshift({id:uid(),employeeId:t.employeeId,employeeName:t.employeeName,department:t.department,provider:t.provider,task:t.task,taskId:t.id,projectId:t.projectId||null,result,createdAt:Date.now()});
   persist();closeResultModal();renderAll();
 }
 
