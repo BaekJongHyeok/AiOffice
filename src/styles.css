@@ -27,3 +27,23 @@
 .project-final-report{margin-top:14px;padding:12px;border:1px solid #45d48355;background:#45d4830d;border-radius:9px}
 .project-final-report b{font-size:12px}
 .project-final-report p{margin:7px 0 0;color:#cfd7e8;font-size:11px;line-height:1.55}
+
+.reports-section-title{display:flex;align-items:center;justify-content:space-between;margin:0 0 12px}
+.reports-section-title h3{margin:0;font-size:14px}
+.reports-section-title span{font-size:11px;color:var(--muted)}
+.executive-report{border-color:#7c8cff55;background:linear-gradient(180deg,#171f30,#151b28)}
+.executive-kicker{font-size:10px;letter-spacing:1.2px;color:#9ba7ff;font-weight:800;margin-bottom:7px}
+.executive-report h3{font-size:20px;margin-bottom:6px}
+.executive-body{margin-top:16px;background:#0f1520;border:1px solid #232d40;border-radius:10px;padding:18px}
+.executive-body h4{margin:18px 0 8px;font-size:14px;color:#fff}
+.executive-body h4:first-child{margin-top:0}
+.executive-body p{margin:6px 0;color:#dce5f8;font-size:13px;line-height:1.65}
+.executive-body ul{margin:6px 0 12px;padding-left:20px;color:#dce5f8}
+.executive-body li{margin:5px 0;line-height:1.55;font-size:13px}
+.work-report-group{margin-top:18px;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px}
+.work-report-group summary{cursor:pointer;font-weight:700;font-size:12px;color:#cbd2ff}
+.work-report-list{display:grid;gap:10px;margin-top:12px}
+.work-report{padding:14px}
+.report-quality-note{margin-top:14px;padding:10px 12px;border:1px solid #ffbd5940;background:#ffbd5910;color:#ffd28a;border-radius:8px;font-size:11px}
+#projectModal .modal-card{will-change:transform;transform:translateZ(0)}
+#projectModal input,#projectModal textarea,#projectModal select{pointer-events:auto;touch-action:manipulation}
