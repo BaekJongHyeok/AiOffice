@@ -237,21 +237,39 @@
   }
 
 
-  function employeePosition(index, visualState) {
-    const deskPositions = [
-      [17,47],[36,47],[55,47],
-      [17,68],[36,68],[55,68],
-      [24,83],[46,83],[67,78]
-    ];
-    const base = deskPositions[index % deskPositions.length];
-    const manager = [69,63], meeting=[72,20], ceo=[24,19];
-
-    if (visualState === 'meeting') return meeting;
-    if (visualState === 'reporting' || visualState === 'moving-report') return manager;
-    if (visualState === 'ceo-report') return ceo;
-    return base;
+  function employeeRoleType(employee) {
+    const style=employee.spriteStyle||'auto';
+    if(style!=='auto') return style;
+    const combined=`${employee.department||''} ${employee.role||''}`.toLowerCase();
+    if(/마케팅|콘텐츠/.test(combined)) return 'marketing';
+    if(/개발|엔지니어|코드/.test(combined)) return 'development';
+    if(/디자인/.test(combined)) return 'design';
+    if(/분석|데이터|리서치/.test(combined)) return 'analysis';
+    if(/qa|검수|품질/.test(combined)) return 'qa';
+    if(/팀장|대표|ceo/.test(`${employee.rank||''} ${employee.role||''}`.toLowerCase())) return 'leader';
+    return 'planning';
   }
 
+  function employeePosition(employee,index,visualState) {
+    const role=employeeRoleType(employee);
+    const roleSlots={
+      planning:[[13,49],[23,51]],
+      marketing:[[42,49],[53,51]],
+      development:[[13,73],[24,76]],
+      design:[[42,73],[53,76]],
+      analysis:[[66,49],[73,56]],
+      qa:[[66,58],[73,62]],
+      leader:[[67,72],[58,81]],
+    };
+    const slots=roleSlots[role]||roleSlots.planning;
+    const base=slots[index%slots.length];
+    const manager=[68,64], meeting=[59,20], ceo=[20,20];
+
+    if(visualState==='meeting') return meeting;
+    if(visualState==='reporting'||visualState==='moving-report') return manager;
+    if(visualState==='ceo-report') return ceo;
+    return base;
+  }
 
   function renderCompanyOffice() {
     if (!document.querySelector('#simEmployees')) buildCompanyShell();
@@ -271,7 +289,7 @@
 
     visibleEmployees.forEach((employee,index) => {
       const vstate = employeeVisualState(employee);
-      const pos = employeePosition(index,vstate);
+      const pos = employeePosition(employee,index,vstate);
       const meta = statusMeta[vstate] || statusMeta.idle;
       const task = activeTask(employee.id) || recentDoneTask(employee.id);
       const selected = companyUI.selectedEmployeeId === employee.id;
