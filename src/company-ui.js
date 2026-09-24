@@ -134,8 +134,11 @@
           <div class="layout-editor-bar">
             <button id="layoutEditBtn" class="layout-edit-btn">✥ 배치 편집</button>
             <div id="layoutTools" class="layout-tools">
-              <button data-add="desk-1p">+ 1인 책상</button><button data-add="desk-2p">+ 2인 책상</button><button data-add="workstation-4p">+ 4인 책상</button><button data-add="meeting-table">+ 회의 테이블</button><button data-add="bookshelf">+ 책장</button><button data-add="server-rack">+ 서버랙</button><button data-add="office-corner">+ 정수기</button><button data-add="plant-large">+ 화분</button>
-              <button id="layoutDeleteBtn">삭제</button><button id="layoutResetBtn">초기화</button><button id="layoutDoneBtn" class="primary">완료</button>
+              <div class="layout-help"><b>배치 편집</b><span id="selectedFurnitureLabel">가구를 클릭해서 선택하고 드래그하세요.</span></div>
+              <div class="layout-add-group">
+                <button data-add="desk-1p">+ 1인 책상</button><button data-add="desk-2p">+ 2인 책상</button><button data-add="workstation-4p">+ 4인 책상</button><button data-add="meeting-table">+ 회의 테이블</button><button data-add="bookshelf">+ 책장</button><button data-add="server-rack">+ 서버랙</button><button data-add="office-corner">+ 정수기</button><button data-add="plant-large">+ 화분</button>
+              </div>
+              <div class="layout-action-group"><button id="layoutDeleteBtn">선택 삭제</button><button id="layoutResetBtn">초기화</button><button id="layoutDoneBtn" class="primary">완료</button></div>
             </div>
           </div>
 
@@ -184,12 +187,54 @@
     `;
 
     renderFurniture();
-    const editBtn=document.querySelector('#layoutEditBtn'), tools=document.querySelector('#layoutTools');
-    editBtn?.addEventListener('click',()=>{companyUI.layoutEdit=true;document.querySelector('.game-office')?.classList.add('layout-editing');tools?.classList.add('show');editBtn.style.display='none';renderFurniture()});
-    document.querySelector('#layoutDoneBtn')?.addEventListener('click',()=>{companyUI.layoutEdit=false;companyUI.selectedFurnitureId=null;document.querySelector('.game-office')?.classList.remove('layout-editing');tools?.classList.remove('show');if(editBtn)editBtn.style.display='';saveFurniture();renderFurniture()});
-    tools?.querySelectorAll('[data-add]').forEach(btn=>btn.addEventListener('click',()=>{const type=btn.dataset.add;const preset=furnitureCatalog[type];if(!preset)return;furniture.push({id:'f-'+Date.now(),type,x:44,y:55,...preset});saveFurniture();renderFurniture()}));
-    document.querySelector('#layoutDeleteBtn')?.addEventListener('click',()=>{if(!companyUI.selectedFurnitureId)return;furniture=furniture.filter(x=>x.id!==companyUI.selectedFurnitureId);companyUI.selectedFurnitureId=null;saveFurniture();renderFurniture()});
-    document.querySelector('#layoutResetBtn')?.addEventListener('click',()=>{furniture=defaultFurniture.map(x=>({...x}));companyUI.selectedFurnitureId=null;saveFurniture();renderFurniture()});
+    const editBtn=document.querySelector('#layoutEditBtn'), tools=document.querySelector('#layoutTools'), office=document.querySelector('.game-office');
+    const refreshSelectedFurnitureLabel=()=>{
+      const label=document.querySelector('#selectedFurnitureLabel');
+      const selected=furniture.find(x=>x.id===companyUI.selectedFurnitureId);
+      if(label) label.textContent=selected ? `${furnitureCatalog[selected.type]?.label||selected.type} 선택됨 · 드래그해서 이동` : '가구를 클릭해서 선택하고 드래그하세요.';
+    };
+    const enterLayoutEdit=()=>{
+      companyUI.layoutEdit=true;
+      office?.classList.add('layout-editing');
+      tools?.classList.add('show');
+      if(editBtn) editBtn.style.display='none';
+      renderFurniture();
+      refreshSelectedFurnitureLabel();
+    };
+    const leaveLayoutEdit=()=>{
+      companyUI.layoutEdit=false;
+      companyUI.selectedFurnitureId=null;
+      office?.classList.remove('layout-editing');
+      tools?.classList.remove('show');
+      if(editBtn) editBtn.style.display='';
+      saveFurniture();
+      renderFurniture();
+    };
+    editBtn?.addEventListener('click',(ev)=>{ev.stopPropagation();enterLayoutEdit()});
+    document.querySelector('#layoutDoneBtn')?.addEventListener('click',(ev)=>{ev.stopPropagation();leaveLayoutEdit()});
+    tools?.querySelectorAll('[data-add]').forEach(btn=>btn.addEventListener('click',(ev)=>{
+      ev.stopPropagation();
+      const type=btn.dataset.add,preset=furnitureCatalog[type]; if(!preset)return;
+      const item={id:'f-'+Date.now(),type,x:42,y:48,...preset};
+      furniture.push(item); companyUI.selectedFurnitureId=item.id; saveFurniture(); renderFurniture(); refreshSelectedFurnitureLabel();
+    }));
+    document.querySelector('#layoutDeleteBtn')?.addEventListener('click',(ev)=>{
+      ev.stopPropagation(); if(!companyUI.selectedFurnitureId)return;
+      furniture=furniture.filter(x=>x.id!==companyUI.selectedFurnitureId); companyUI.selectedFurnitureId=null; saveFurniture(); renderFurniture(); refreshSelectedFurnitureLabel();
+    });
+    document.querySelector('#layoutResetBtn')?.addEventListener('click',(ev)=>{
+      ev.stopPropagation(); furniture=defaultFurniture.map(x=>({...x})); companyUI.selectedFurnitureId=null; saveFurniture(); renderFurniture(); refreshSelectedFurnitureLabel();
+    });
+    office?.addEventListener('pointerdown',(ev)=>{
+      if(!companyUI.layoutEdit) return;
+      if(ev.target.closest('.office-item,.layout-editor-bar')) return;
+      companyUI.selectedFurnitureId=null; renderFurniture(); refreshSelectedFurnitureLabel();
+    });
+    const deleteSelected=(ev)=>{
+      if(!companyUI.layoutEdit || !['Delete','Backspace'].includes(ev.key) || !companyUI.selectedFurnitureId) return;
+      ev.preventDefault(); furniture=furniture.filter(x=>x.id!==companyUI.selectedFurnitureId); companyUI.selectedFurnitureId=null; saveFurniture(); renderFurniture(); refreshSelectedFurnitureLabel();
+    };
+    window.addEventListener('keydown',deleteSelected,{once:false});
 
     const selectAll = document.querySelector('#selectAllBtnCompany');
     const run = document.querySelector('#runTaskBtnCompany');
@@ -210,20 +255,63 @@
     const host=document.querySelector('#officeFurniture'); if(!host)return;
     host.innerHTML=furniture.map(item=>{
       const preset=furnitureCatalog[item.type]||item;
-      return `<button class="office-item pixel-furniture ${companyUI.selectedFurnitureId===item.id?'selected':''}" data-id="${item.id}" style="left:${item.x}%;top:${item.y}%;width:${item.w}%;height:${item.h}%">
-        <img class="furniture-sprite real-furniture-image" src="assets/furniture/${item.type}.png" alt="${preset.label||item.type}" draggable="false">
+      return `<button type="button" class="office-item pixel-furniture ${companyUI.selectedFurnitureId===item.id?'selected':''}" data-id="${item.id}" aria-label="${preset.label||item.type}" style="left:${item.x}%;top:${item.y}%;width:${item.w}%;height:${item.h}%">
+        <img class="furniture-sprite real-furniture-image" src="assets/furniture/${item.type}.png" alt="" draggable="false">
         <em>${preset.label||item.label||item.type}</em>
       </button>`;
     }).join('');
+
+    const updateLabel=()=>{
+      const label=document.querySelector('#selectedFurnitureLabel');
+      const selected=furniture.find(x=>x.id===companyUI.selectedFurnitureId);
+      if(label) label.textContent=selected ? `${furnitureCatalog[selected.type]?.label||selected.type} 선택됨 · 드래그해서 이동` : '가구를 클릭해서 선택하고 드래그하세요.';
+    };
+
     host.querySelectorAll('.office-item').forEach(el=>{
-      el.onclick=(ev)=>{if(!companyUI.layoutEdit)return;ev.stopPropagation();companyUI.selectedFurnitureId=el.dataset.id;renderFurniture()};
-      el.onpointerdown=(ev)=>{
-        if(!companyUI.layoutEdit)return;ev.preventDefault();ev.stopPropagation();companyUI.selectedFurnitureId=el.dataset.id;
-        const item=furniture.find(x=>x.id===el.dataset.id), office=document.querySelector('.game-office'), rect=office.getBoundingClientRect();
-        const move=(e)=>{item.x=Math.max(0,Math.min(100-item.w,((e.clientX-rect.left)/rect.width*100)-item.w/2));item.y=Math.max(0,Math.min(100-item.h,((e.clientY-rect.top)/rect.height*100)-item.h/2));el.style.left=item.x+'%';el.style.top=item.y+'%'};
-        const up=()=>{window.removeEventListener('pointermove',move);window.removeEventListener('pointerup',up);saveFurniture();renderFurniture()};
-        window.addEventListener('pointermove',move);window.addEventListener('pointerup',up);
-      };
+      el.addEventListener('click',(ev)=>{
+        if(!companyUI.layoutEdit)return;
+        ev.preventDefault(); ev.stopPropagation();
+        companyUI.selectedFurnitureId=el.dataset.id;
+        host.querySelectorAll('.office-item').forEach(x=>x.classList.toggle('selected',x===el));
+        updateLabel();
+      });
+
+      el.addEventListener('pointerdown',(ev)=>{
+        if(!companyUI.layoutEdit)return;
+        ev.preventDefault(); ev.stopPropagation();
+        const item=furniture.find(x=>x.id===el.dataset.id); if(!item)return;
+        companyUI.selectedFurnitureId=item.id;
+        host.querySelectorAll('.office-item').forEach(x=>x.classList.toggle('selected',x===el));
+        updateLabel();
+
+        const office=document.querySelector('.game-office');
+        const rect=office.getBoundingClientRect();
+        const startX=ev.clientX, startY=ev.clientY, originX=item.x, originY=item.y;
+        const pointerId=ev.pointerId;
+        el.classList.add('dragging');
+        try{el.setPointerCapture(pointerId)}catch{}
+
+        const move=(e)=>{
+          if(e.pointerId!==pointerId)return;
+          const dx=(e.clientX-startX)/rect.width*100;
+          const dy=(e.clientY-startY)/rect.height*100;
+          item.x=Math.max(0,Math.min(100-item.w,originX+dx));
+          item.y=Math.max(0,Math.min(100-item.h,originY+dy));
+          el.style.left=item.x+'%'; el.style.top=item.y+'%';
+        };
+        const up=(e)=>{
+          if(e.pointerId!==pointerId)return;
+          try{el.releasePointerCapture(pointerId)}catch{}
+          el.classList.remove('dragging');
+          el.removeEventListener('pointermove',move);
+          el.removeEventListener('pointerup',up);
+          el.removeEventListener('pointercancel',up);
+          saveFurniture(); updateLabel();
+        };
+        el.addEventListener('pointermove',move);
+        el.addEventListener('pointerup',up);
+        el.addEventListener('pointercancel',up);
+      });
     });
   }
 
@@ -558,7 +646,7 @@
     updateSelectedEmployeeStyles();
   });
   const version = document.querySelector('.sidebar-foot small');
-  if (version) version.textContent = 'v1.0.2 · Real PNG Furniture';
+  if (version) version.textContent = 'v1.1.0 · Interactive Layout';
 
   try {
     renderOffice = renderCompanyOffice;
