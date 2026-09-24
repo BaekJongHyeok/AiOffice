@@ -1,7 +1,7 @@
 {
   "name": "ai-office-subscription-edition",
-  "version": "0.2.2",
-  "description": "AI OFFICE Subscription Edition with GitHub update workflow",
+  "version": "0.3.0",
+  "description": "AI OFFICE Subscription Edition with experimental subscription automation and GitHub update workflow",
   "main": "src/main.js",
   "scripts": {
     "start": "electron .",
