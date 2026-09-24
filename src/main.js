@@ -29,6 +29,78 @@ function createMainWindow() {
 
 function getPartition(provider) { return `persist:ai-office-subscription-${provider}`; }
 
+const MODEL_PROFILE_TARGETS = {
+  chatgpt: {
+    instant: ['Instant'],
+    medium: ['Medium'],
+    high: ['High'],
+    pro: ['GPT-5.6 Sol Pro','GPT-5.6 Pro','5.6 Pro'],
+    'gpt6-pro': ['GPT-6 Pro','Astra']
+  },
+  claude: {
+    'sonnet-5': ['Claude Sonnet 5','Sonnet 5'],
+    'opus-5': ['Claude Opus 5','Opus 5'],
+    'fable-5': ['Claude Fable 5','Fable 5']
+  },
+  gemini: {
+    'flash-lite': ['Flash-Lite','Flash Lite'],
+    flash: ['Gemini Flash','Flash'],
+    pro: ['Gemini Pro','Pro'],
+    'deep-think': ['Deep Think']
+  }
+};
+
+function modelSelectionScript(provider, modelProfile='auto') {
+  const targets = MODEL_PROFILE_TARGETS[provider]?.[modelProfile] || [];
+  if (!targets.length) return null;
+  const safeTargets = JSON.stringify(targets);
+  return `(async () => {
+    const targets = ${safeTargets};
+    const visible = (el) => !!(el && el.getClientRects().length && !el.disabled);
+    const textOf = (el) => ((el?.innerText||'') + ' ' + (el?.getAttribute?.('aria-label')||'') + ' ' + (el?.title||'')).trim();
+    const normalize = (v) => String(v||'').toLowerCase().replace(/\\s+/g,' ').trim();
+    const matches = (el) => {
+      const text = normalize(textOf(el));
+      return targets.some(t => text.includes(normalize(t)));
+    };
+
+    const clickable = () => [...document.querySelectorAll('button,[role="button"],[role="option"],[role="menuitem"],[role="menuitemradio"],li')].filter(visible);
+
+    let direct = clickable().find(matches);
+    if (direct) {
+      direct.click();
+      await new Promise(r=>setTimeout(r,350));
+      return {ok:true, direct:true, label:textOf(direct)};
+    }
+
+    const opener = clickable().find(el => {
+      const text = normalize(textOf(el));
+      return /model|모델|gpt|claude|sonnet|opus|gemini|flash|pro|instant|medium|high/.test(text);
+    });
+    if (!opener) return {ok:false, reason:'model-picker-not-found'};
+
+    opener.click();
+    await new Promise(r=>setTimeout(r,450));
+
+    direct = clickable().find(matches);
+    if (!direct) return {ok:false, reason:'requested-model-not-visible'};
+    direct.click();
+    await new Promise(r=>setTimeout(r,350));
+    return {ok:true, label:textOf(direct)};
+  })()`;
+}
+
+async function trySelectModel(win, provider, modelProfile='auto') {
+  if (!win || win.isDestroyed() || !modelProfile || modelProfile === 'auto') return { ok:true, skipped:true };
+  const script = modelSelectionScript(provider, modelProfile);
+  if (!script) return { ok:true, skipped:true };
+  try {
+    return await win.webContents.executeJavaScript(script, true);
+  } catch (error) {
+    return { ok:false, reason:error.message || String(error) };
+  }
+}
+
 async function ensureProviderWindow(provider, prompt = '', options = {}) {
   const { show = true } = options;
   const info = PROVIDERS[provider];
@@ -54,8 +126,11 @@ async function ensureProviderWindow(provider, prompt = '', options = {}) {
   return win;
 }
 
-function openProvider(provider, prompt = '') {
-  return ensureProviderWindow(provider, prompt, { show:true }).then(() => ({ ok: true, provider, promptCopied: Boolean(prompt) }));
+async function openProvider(provider, prompt = '', modelProfile = 'auto') {
+  const win = await ensureProviderWindow(provider, prompt, { show:true });
+  await sleep(350);
+  const modelSelection = await trySelectModel(win, provider, modelProfile);
+  return { ok:true, provider, promptCopied:Boolean(prompt), modelProfile, modelSelection };
 }
 
 async function hasProviderSession(provider) {
@@ -172,7 +247,7 @@ function isUsableModelResponse(text, prompt) {
   return true;
 }
 
-async function automateSubscription(provider, prompt) {
+async function automateSubscription(provider, prompt, modelProfile = 'auto') {
   const hasSession = await hasProviderSession(provider);
   if (!hasSession) {
     await ensureProviderWindow(provider, '', { show:true });
@@ -181,6 +256,8 @@ async function automateSubscription(provider, prompt) {
 
   const win = await ensureProviderWindow(provider, prompt, { show:false });
   await sleep(800);
+  const modelSelection = await trySelectModel(win, provider, modelProfile);
+  await sleep(300);
 
   let submit = null;
   for (let attempt = 0; attempt < 20; attempt++) {
@@ -210,7 +287,7 @@ async function automateSubscription(provider, prompt) {
     try { text = await win.webContents.executeJavaScript(extractionScript(provider), true); } catch {}
     if (text && isUsableModelResponse(text, prompt)) {
       if (text === last) stable += 1; else { last = text; stable = 0; }
-      if (stable >= 2) return { ok:true, result:text, provider, automated:true };
+      if (stable >= 2) return { ok:true, result:text, provider, modelProfile, modelSelection, automated:true };
     }
   }
   return { ok:false, stage:'timeout', error:'완성된 AI 답변을 확인하지 못했습니다. 프롬프트/중간 로그는 보고서로 저장하지 않았습니다. 다시 자동 실행하거나 수동 결과 입력을 사용하세요.', partial:isUsableModelResponse(last, prompt) ? last : '' };
@@ -222,11 +299,11 @@ app.whenReady().then(() => {
 });
 app.on('window-all-closed', () => { if (process.platform !== 'darwin') app.quit(); });
 
-ipcMain.handle('open-subscription', async (_event, { provider, prompt }) => {
-  try { return await openProvider(provider, prompt || ''); } catch (error) { return { ok:false, error:error.message || String(error) }; }
+ipcMain.handle('open-subscription', async (_event, { provider, prompt, modelProfile }) => {
+  try { return await openProvider(provider, prompt || '', modelProfile || 'auto'); } catch (error) { return { ok:false, error:error.message || String(error) }; }
 });
-ipcMain.handle('automate-subscription', async (_event, { provider, prompt }) => {
-  try { return await automateSubscription(provider, prompt || ''); } catch (error) { return { ok:false, error:error.message || String(error) }; }
+ipcMain.handle('automate-subscription', async (_event, { provider, prompt, modelProfile }) => {
+  try { return await automateSubscription(provider, prompt || '', modelProfile || 'auto'); } catch (error) { return { ok:false, error:error.message || String(error) }; }
 });
 ipcMain.handle('copy-text', async (_event, text) => { clipboard.writeText(String(text || '')); return { ok:true }; });
 ipcMain.handle('session-info', async (_event, provider) => {

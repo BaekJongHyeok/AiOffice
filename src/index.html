@@ -17,7 +17,7 @@
         <button class="nav" data-view="reports">📨 보고함 <span id="reportBadge" class="badge">0</span></button>
         <button class="nav" data-view="settings">🔗 구독 연결</button>
       </nav>
-      <div class="sidebar-foot"><button id="updateAppBtn" class="btn ghost update-btn">↻ 업데이트 & 재시작</button><span class="status-dot"></span> API 과금 없는 모드<br><small>v1.6.5 · CEO Drag Only</small></div>
+      <div class="sidebar-foot"><button id="updateAppBtn" class="btn ghost update-btn">↻ 업데이트 & 재시작</button><span class="status-dot"></span> API 과금 없는 모드<br><small>v1.7.0 · AI Model Profiles</small></div>
     </aside>
 
     <main>
@@ -84,6 +84,7 @@
         <label>직급<select id="empRank"><option>사원</option><option>대리</option><option>과장</option><option>팀장</option></select></label>
         <label>부서<input id="empDept" placeholder="마케팅팀" /></label>
         <label>구독 AI<select id="empProvider"><option value="chatgpt">ChatGPT</option><option value="claude">Claude</option><option value="gemini">Gemini</option><option value="demo">Demo (테스트)</option></select></label>
+        <label>모델 / 응답 모드<select id="empModelProfile"></select></label>
         <label>캐릭터 스타일<select id="empSprite"><option value="auto">역할에 맞게 자동</option><option value="planning">기획</option><option value="marketing">마케팅</option><option value="development">개발</option><option value="design">디자인</option><option value="analysis">분석</option><option value="qa">QA</option><option value="leader">리더 / 팀장</option></select></label>
         <label class="wide">담당 역할<input id="empRole" placeholder="시장 조사 및 전략 기획" /></label>
         <label class="wide">성격 / 업무 스타일<textarea id="empTraits" placeholder="꼼꼼하고 숫자를 중요하게 본다. 보고는 간결하게 한다."></textarea></label>

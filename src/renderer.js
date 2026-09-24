@@ -4,11 +4,43 @@ const uid = () => (crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}-${Ma
 
 const providerLabel = { demo:'DEMO', chatgpt:'ChatGPT', claude:'Claude', gemini:'Gemini' };
 const providerIcon = { demo:'🧪', chatgpt:'🟢', claude:'🟠', gemini:'🔵' };
+const modelProfiles = {
+  chatgpt: [
+    ['auto','자동 / 현재 기본값'],
+    ['instant','GPT-5.6 · Instant'],
+    ['medium','GPT-5.6 · Medium'],
+    ['high','GPT-5.6 · High'],
+    ['pro','GPT-5.6 · Pro'],
+    ['gpt6-pro','GPT-6 Pro · Astra']
+  ],
+  claude: [
+    ['auto','자동 / 현재 기본값'],
+    ['sonnet-5','Claude Sonnet 5'],
+    ['opus-5','Claude Opus 5'],
+    ['fable-5','Claude Fable 5']
+  ],
+  gemini: [
+    ['auto','자동 / 현재 기본값'],
+    ['flash-lite','Gemini Flash-Lite'],
+    ['flash','Gemini Flash'],
+    ['pro','Gemini Pro'],
+    ['deep-think','Gemini Pro · Deep Think']
+  ],
+  demo: [['auto','Demo 기본']]
+};
+const modelProfileLabel=(provider,value)=>(modelProfiles[provider]||modelProfiles.chatgpt).find(x=>x[0]===value)?.[1]||'자동 / 현재 기본값';
+function syncEmployeeModelOptions(selected='auto'){
+  const provider=$('#empProvider')?.value||'chatgpt';
+  const select=$('#empModelProfile');
+  if(!select) return;
+  select.innerHTML=(modelProfiles[provider]||modelProfiles.chatgpt).map(([value,label])=>'<option value="'+value+'">'+label+'</option>').join('');
+  select.value=[...select.options].some(o=>o.value===selected)?selected:'auto';
+}
 
 const defaultEmployees = [
-  { id: uid(), name: '김기획', rank: '팀장', department: '기획팀', provider: 'chatgpt', role: '시장 조사 및 사업 전략', traits: '논리적이고 구조적으로 보고한다.', avatar: '🧑‍💼' },
-  { id: uid(), name: '박마케팅', rank: '대리', department: '마케팅팀', provider: 'claude', role: '콘텐츠 및 마케팅 전략', traits: '창의적인 아이디어를 다양하게 제안한다.', avatar: '👩‍💼' },
-  { id: uid(), name: '이검수', rank: '과장', department: 'QA팀', provider: 'gemini', role: '결과 검수 및 리스크 확인', traits: '빠진 내용과 위험요소를 꼼꼼히 찾는다.', avatar: '👨‍💼' },
+  { id: uid(), name: '김기획', rank: '팀장', department: '기획팀', provider: 'chatgpt', modelProfile:'auto', role: '시장 조사 및 사업 전략', traits: '논리적이고 구조적으로 보고한다.', avatar: '🧑‍💼' },
+  { id: uid(), name: '박마케팅', rank: '대리', department: '마케팅팀', provider: 'claude', modelProfile:'auto', role: '콘텐츠 및 마케팅 전략', traits: '창의적인 아이디어를 다양하게 제안한다.', avatar: '👩‍💼' },
+  { id: uid(), name: '이검수', rank: '과장', department: 'QA팀', provider: 'gemini', modelProfile:'auto', role: '결과 검수 및 리스크 확인', traits: '빠진 내용과 위험요소를 꼼꼼히 찾는다.', avatar: '👨‍💼' },
 ];
 
 function migrateEmployees(raw) {
@@ -16,7 +48,7 @@ function migrateEmployees(raw) {
   return raw.map(e => ({
     ...e,
     provider: e.provider === 'openai' ? 'chatgpt' : e.provider === 'anthropic' ? 'claude' : (e.provider || 'chatgpt'),
-    model: undefined,
+    modelProfile: e.modelProfile || e.model || 'auto',
   }));
 }
 
@@ -99,7 +131,7 @@ function renderTasks(){
 }
 function taskCard(t){
   const actions=t.status==='done'?'':`<div class="mini-actions"><button class="text-btn board-open" data-id="${t.id}">AI 열기</button><button class="text-btn board-copy" data-id="${t.id}">프롬프트 복사</button><button class="text-btn board-finish" data-id="${t.id}">결과 입력</button></div>`;
-  return `<div class="task-item" data-task-id="${t.id}"><div class="task-top"><b>${escapeHtml(t.employeeName)}</b><span>${t.status==='queued'?'대기':t.status==='working'?'⚡ 작업중':t.status==='opened'?(t.automationError?'⚠ 자동화 실패':'AI 창 열림'):'완료'}</span></div><div class="task-meta">${providerLabel[t.provider]||t.provider} · ${escapeHtml(t.task)}</div>${t.automationError?`<div class="task-error">${escapeHtml(t.automationError)}</div>`:''}${actions}</div>`;
+  return `<div class="task-item" data-task-id="${t.id}"><div class="task-top"><b>${escapeHtml(t.employeeName)}</b><span>${t.status==='queued'?'대기':t.status==='working'?'⚡ 작업중':t.status==='opened'?(t.automationError?'⚠ 자동화 실패':'AI 창 열림'):'완료'}</span></div><div class="task-meta">${providerLabel[t.provider]||t.provider} · ${escapeHtml(modelProfileLabel(t.provider,t.modelProfile||'auto'))} · ${escapeHtml(t.task)}</div>${t.automationError?`<div class="task-error">${escapeHtml(t.automationError)}</div>`:''}${actions}</div>`;
 }
 
 function isReportUsable(report){
@@ -186,14 +218,14 @@ function renderSubscriptionCards(refresh=true){
 function openEmployeeModal(id=null){
   state.editingId=id; const e=state.employees.find(x=>x.id===id);
   $('#modalTitle').textContent=e?'직원 정보 수정':'새 직원 채용';$('#saveEmployee').textContent=e?'저장하기':'채용하기';
-  $('#empName').value=e?.name||'';$('#empRank').value=e?.rank||'사원';$('#empDept').value=e?.department||'';$('#empProvider').value=e?.provider||'chatgpt';if($('#empSprite')) $('#empSprite').value=e?.spriteStyle||'auto';$('#empRole').value=e?.role||'';$('#empTraits').value=e?.traits||'';
+  $('#empName').value=e?.name||'';$('#empRank').value=e?.rank||'사원';$('#empDept').value=e?.department||'';$('#empProvider').value=e?.provider||'chatgpt';syncEmployeeModelOptions(e?.modelProfile||'auto');if($('#empSprite')) $('#empSprite').value=e?.spriteStyle||'auto';$('#empRole').value=e?.role||'';$('#empTraits').value=e?.traits||'';
   $('#employeeModal').classList.remove('hidden');
 }
 function closeEmployeeModal(){ $('#employeeModal').classList.add('hidden'); state.editingId=null; }
 
 function saveEmployee(){
   const name=$('#empName').value.trim(); if(!name){alert('직원 이름을 입력하세요.');return}
-  const data={name,rank:$('#empRank').value,department:$('#empDept').value.trim()||'미지정',provider:$('#empProvider').value,spriteStyle:$('#empSprite')?.value||'auto',role:$('#empRole').value.trim()||'일반 업무',traits:$('#empTraits').value.trim(),avatar:['🧑‍💼','👩‍💼','👨‍💼'][state.employees.length%3]};
+  const data={name,rank:$('#empRank').value,department:$('#empDept').value.trim()||'미지정',provider:$('#empProvider').value,modelProfile:$('#empModelProfile')?.value||'auto',spriteStyle:$('#empSprite')?.value||'auto',role:$('#empRole').value.trim()||'일반 업무',traits:$('#empTraits').value.trim(),avatar:['🧑‍💼','👩‍💼','👨‍💼'][state.employees.length%3]};
   if(state.editingId){const i=state.employees.findIndex(e=>e.id===state.editingId);state.employees[i]={...state.employees[i],...data}}else state.employees.push({id:uid(),...data});
   persist();closeEmployeeModal();renderAll();
 }
@@ -204,22 +236,22 @@ async function runTasks(){
   for(const id of ids){
     const e=state.employees.find(x=>x.id===id);
     if(e.provider==='demo'){
-      const t={id:uid(),employeeId:e.id,employeeName:e.name,department:e.department,provider:e.provider,task,status:'done',startedAt:Date.now(),finishedAt:Date.now()};state.tasks.unshift(t);
+      const t={id:uid(),employeeId:e.id,employeeName:e.name,department:e.department,provider:e.provider,modelProfile:e.modelProfile||'auto',task,status:'done',startedAt:Date.now(),finishedAt:Date.now()};state.tasks.unshift(t);
       state.reports.unshift({id:uid(),employeeId:e.id,employeeName:e.name,department:e.department,provider:e.provider,task,result:`[DEMO] ${e.role} 담당 직원이 업무를 접수했습니다.\n\n실제 구독 AI 직원으로 변경하면 해당 서비스 창에서 업무를 수행할 수 있습니다.`,createdAt:Date.now()});
     } else {
-      state.tasks.unshift({id:uid(),employeeId:e.id,employeeName:e.name,department:e.department,provider:e.provider,task,prompt:buildPrompt(e,task),status:'queued',startedAt:Date.now()});
+      state.tasks.unshift({id:uid(),employeeId:e.id,employeeName:e.name,department:e.department,provider:e.provider,modelProfile:e.modelProfile||'auto',task,prompt:buildPrompt(e,task),status:'queued',startedAt:Date.now()});
     }
   }
   persist();renderAll();switchView('tasks');
 }
 
-async function openProvider(provider, prompt=''){
+async function openProvider(provider, prompt='', modelProfile='auto'){
   if(provider==='demo') return;
-  const r=await window.aiOffice.openSubscription(provider,prompt); if(!r.ok) alert(r.error||'AI 창을 열지 못했습니다.');
+  const r=await window.aiOffice.openSubscription(provider,prompt,modelProfile); if(!r.ok) alert(r.error||'AI 창을 열지 못했습니다.');
 }
 async function openTaskInProvider(id){
   const t=state.tasks.find(x=>x.id===id); if(!t) return;
-  await openProvider(t.provider,t.prompt||'');
+  await openProvider(t.provider,t.prompt||'',t.modelProfile||'auto');
   t.status='opened';t.openedAt=Date.now();persist();renderAll();
 }
 async function copyTaskPrompt(id){
@@ -251,7 +283,8 @@ function switchView(name){
 }
 function escapeHtml(s=''){return String(s).replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]))}
 
-$$('.nav').forEach(n=>n.onclick=()=>switchView(n.dataset.view));
+$('#empProvider')?.addEventListener('change',()=>syncEmployeeModelOptions('auto'));
+$('.nav').forEach(n=>n.onclick=()=>switchView(n.dataset.view));
 $('#newEmployeeTop').onclick=()=>openEmployeeModal();$('#newEmployeeBtn').onclick=()=>openEmployeeModal();$('#closeModal').onclick=closeEmployeeModal;$('#cancelEmployee').onclick=closeEmployeeModal;$('#saveEmployee').onclick=saveEmployee;
 $('#selectAllBtn').onclick=()=>{$$('#assigneeList input').forEach(x=>x.checked=true)};$('#runTaskBtn').onclick=runTasks;$('#goReports').onclick=()=>switchView('reports');
 $('#clearReports').onclick=()=>{if(confirm('보고함을 비울까요?')){state.reports=[];persist();renderAll()}};

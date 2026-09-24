@@ -186,7 +186,7 @@
       if (!e) continue;
       const task = {
         id: uid(), employeeId: e.id, employeeName: e.name,
-        department: e.department, provider: e.provider,
+        department: e.department, provider: e.provider, modelProfile: e.modelProfile || 'auto',
         task: `[${project.name}] ${e.role} 관점의 업무 수행`,
         prompt: projectPrompt(e, project),
         status: e.provider === 'demo' ? 'done' : 'queued',
@@ -253,6 +253,7 @@
       employeeName: manager.name,
       department: manager.department,
       provider: manager.provider,
+      modelProfile: manager.modelProfile || 'auto',
       task: `[${project.name}] 팀장 최종 취합 및 CEO 보고`,
       prompt: managerPrompt(manager, project, reports),
       status: manager.provider === 'demo' ? 'done' : 'queued',
