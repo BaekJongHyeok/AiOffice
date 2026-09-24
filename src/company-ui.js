@@ -528,7 +528,7 @@
     updateSelectedEmployeeStyles();
   });
   const version = document.querySelector('.sidebar-foot small');
-  if (version) version.textContent = 'v0.7.4 · Portrait Crop';
+  if (version) version.textContent = 'v0.7.5 · Portrait Center';
 
   try {
     renderOffice = renderCompanyOffice;
