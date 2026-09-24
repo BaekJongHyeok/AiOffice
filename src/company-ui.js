@@ -1155,7 +1155,7 @@
     updateSelectedEmployeeStyles();
   });
   const version = document.querySelector('.sidebar-foot small');
-  if (version) version.textContent = 'v1.5.4 · Interaction Fix';
+  if (version) version.textContent = 'v1.5.5 · Employee Input Fix';
 
   try {
     renderOffice = renderCompanyOffice;
