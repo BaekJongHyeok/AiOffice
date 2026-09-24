@@ -1155,7 +1155,7 @@
     updateSelectedEmployeeStyles();
   });
   const version = document.querySelector('.sidebar-foot small');
-  if (version) version.textContent = 'v1.5.3 · Draggable CEO';
+  if (version) version.textContent = 'v1.5.4 · Interaction Fix';
 
   try {
     renderOffice = renderCompanyOffice;
