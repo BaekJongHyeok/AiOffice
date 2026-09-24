@@ -448,7 +448,8 @@
           <div class="popover-profile-copy">
             <div class="inspector-name-line"><h2>${escapeHtml(e.name)}</h2></div>
             <div class="status-chip ${vstate}"><i></i>${escapeHtml(meta[0])}</div>
-            <p>${escapeHtml(e.department||'미지정')} <span class="profile-divider">|</span> ${escapeHtml(e.rank||'사원')} <span class="profile-divider">|</span> ${escapeHtml(e.role||'일반 업무')}</p>
+            <p class="profile-meta">${escapeHtml(e.department||'미지정')} <span class="profile-divider">|</span> ${escapeHtml(e.rank||'사원')}</p>
+            <p class="profile-role">${escapeHtml(e.role||'일반 업무')}</p>
           </div>
         </div>
 
@@ -527,7 +528,7 @@
     updateSelectedEmployeeStyles();
   });
   const version = document.querySelector('.sidebar-foot small');
-  if (version) version.textContent = 'v0.7.2 · Employee Detail UI';
+  if (version) version.textContent = 'v0.7.3 · Profile Card Fix';
 
   try {
     renderOffice = renderCompanyOffice;
