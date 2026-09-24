@@ -596,3 +596,59 @@ body{overflow:hidden}.app-shell{height:100vh;min-height:0;overflow:hidden}main{h
 .game-office .sim-working.seat-seated .asset-pixel-avatar{animation:seatedWork .6s steps(2,end) infinite alternate!important}
 @keyframes seatedWork{to{transform:translateY(8px) scale(.86)}}
 .game-office .employee-task-caption{display:none!important}
+
+/* v1.2.2 restore character scale; seat via clipping, not shrinking */
+.game-office .sim-employee{
+  width:118px!important;
+  height:122px!important;
+}
+.game-office .employee-status-bubble{
+  top:-10px!important;
+  min-width:76px!important;
+  max-width:110px!important;
+  padding:4px 7px!important;
+}
+.game-office .employee-status-bubble b{font-size:9px!important}
+.game-office .employee-character{
+  top:30px!important;
+  width:80px!important;
+  height:80px!important;
+  overflow:visible!important;
+}
+.game-office .asset-pixel-avatar{
+  width:80px!important;
+  height:80px!important;
+  transform:none!important;
+}
+.game-office .asset-pixel-avatar .asset-sprite{
+  width:80px!important;
+  height:80px!important;
+  background-size:560px 80px!important;
+}
+.game-office .asset-pixel-avatar.role-planning .asset-sprite{background-position:0 0!important}
+.game-office .asset-pixel-avatar.role-marketing .asset-sprite{background-position:-80px 0!important}
+.game-office .asset-pixel-avatar.role-development .asset-sprite{background-position:-160px 0!important}
+.game-office .asset-pixel-avatar.role-design .asset-sprite{background-position:-240px 0!important}
+.game-office .asset-pixel-avatar.role-analysis .asset-sprite{background-position:-320px 0!important}
+.game-office .asset-pixel-avatar.role-qa .asset-sprite{background-position:-400px 0!important}
+.game-office .asset-pixel-avatar.role-leader .asset-sprite{background-position:-480px 0!important}
+.game-office .seat-seated .employee-character{
+  top:28px!important;
+  height:66px!important;
+  overflow:hidden!important;
+}
+.game-office .seat-seated .asset-pixel-avatar{
+  transform:translateY(8px)!important;
+}
+.game-office .seat-facing-down .asset-pixel-avatar{
+  transform:none!important;
+}
+.game-office .seat-seated.seat-facing-down .asset-pixel-avatar{
+  transform:translateY(6px)!important;
+}
+.game-office .sim-working.seat-seated .asset-pixel-avatar{
+  animation:seatedWorkV2 .55s steps(2,end) infinite alternate!important;
+}
+@keyframes seatedWorkV2{
+  to{transform:translateY(9px)}
+}
