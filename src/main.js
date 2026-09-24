@@ -29,19 +29,22 @@ function createMainWindow() {
 
 function getPartition(provider) { return `persist:ai-office-subscription-${provider}`; }
 
-async function ensureProviderWindow(provider, prompt = '') {
+async function ensureProviderWindow(provider, prompt = '', options = {}) {
+  const { show = true } = options;
   const info = PROVIDERS[provider];
   if (!info) throw new Error('지원하지 않는 구독 서비스입니다.');
   if (prompt) clipboard.writeText(prompt);
 
   let win = providerWindows.get(provider);
   if (win && !win.isDestroyed()) {
-    win.show(); win.focus();
+    if (show) { win.show(); win.focus(); }
+    else win.hide();
     return win;
   }
 
   win = new BrowserWindow({
-    width: 1180, height: 820, title: `AI OFFICE · ${info.name}`,
+    width: 1180, height: 820, show,
+    title: `AI OFFICE · ${info.name}`,
     backgroundColor: '#10141f',
     webPreferences: { partition: getPartition(provider), contextIsolation: true, nodeIntegration: false, sandbox: true },
   });
@@ -52,7 +55,15 @@ async function ensureProviderWindow(provider, prompt = '') {
 }
 
 function openProvider(provider, prompt = '') {
-  return ensureProviderWindow(provider, prompt).then(() => ({ ok: true, provider, promptCopied: Boolean(prompt) }));
+  return ensureProviderWindow(provider, prompt, { show:true }).then(() => ({ ok: true, provider, promptCopied: Boolean(prompt) }));
+}
+
+async function hasProviderSession(provider) {
+  const info = PROVIDERS[provider];
+  if (!info) return false;
+  const ses = session.fromPartition(getPartition(provider));
+  const cookies = await ses.cookies.get({ domain: info.domain });
+  return cookies.length > 0;
 }
 
 function automationScript(prompt) {
@@ -112,7 +123,13 @@ function extractionScript() {
 }
 
 async function automateSubscription(provider, prompt) {
-  const win = await ensureProviderWindow(provider, prompt);
+  const hasSession = await hasProviderSession(provider);
+  if (!hasSession) {
+    await ensureProviderWindow(provider, '', { show:true });
+    return { ok:false, stage:'login', error:'로그인이 필요합니다. 열린 구독 창에서 로그인한 뒤 다시 자동 실행하세요.' };
+  }
+
+  const win = await ensureProviderWindow(provider, prompt, { show:false });
   await sleep(1200);
   let submit;
   try { submit = await win.webContents.executeJavaScript(automationScript(prompt), true); }
