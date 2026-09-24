@@ -213,8 +213,8 @@
     'moving-meeting': ['회의실 이동 중','회의실로 이동','🚶'],
     meeting: ['회의 중','프로젝트 회의','👥'],
     returning: ['자리 복귀 중','자기 자리로 복귀','↩'],
-    'moving-report': ['보고 이동 중','팀장에게 보고하러 이동','🚶'],
-    reporting: ['보고 중','팀장에게 결과 보고','📨'],
+    'moving-report': ['대표 보고 이동 중','대표에게 보고하러 이동','🚶'],
+    reporting: ['대표 보고 중','대표에게 결과 보고','📨'],
     'moving-ceo': ['CEO실 이동 중','CEO에게 최종 보고하러 이동','🚶'],
     'ceo-report': ['최종 보고 중','CEO에게 최종 보고','👑'],
     done: ['업무 완료','업무 완료','✓'],
@@ -639,12 +639,8 @@
   }
 
   function ceoReportPoint() {
-    const desk=furnitureByType('ceo-desk')[0];
-    if(!desk){
-      const [x,y]=ceoCharacterPoint();
-      return clampOfficePoint([x,y+10]);
-    }
-    return clampOfficePoint([desk.x+desk.w*.50,desk.y+desk.h*1.03]);
+    const [x,y]=ceoCharacterPoint();
+    return clampOfficePoint([x,y+9]);
   }
 
   function managerReportPoint() {
@@ -665,7 +661,7 @@
       return {point:meetingSeatForEmployee(employee,index),facing:'down',seated:false};
     }
     if(visualState==='reporting'||visualState==='moving-report') {
-      return {point:managerReportPoint(),facing:'down',seated:false};
+      return {point:ceoReportPoint(),facing:'up',seated:false};
     }
     if(visualState==='moving-ceo'||visualState==='ceo-report') {
       return {point:ceoReportPoint(),facing:'down',seated:false};
@@ -1078,7 +1074,7 @@
     updateSelectedEmployeeStyles();
   });
   const version = document.querySelector('.sidebar-foot small');
-  if (version) version.textContent = 'v1.7.3 · Global UI Events Fix';
+  if (version) version.textContent = 'v1.7.4 · Report To CEO';
 
   try {
     renderOffice = renderCompanyOffice;
