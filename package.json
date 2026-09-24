@@ -1,6 +1,6 @@
 {
   "name": "ai-office-subscription-edition",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "AI OFFICE Subscription Edition with project manager, task controls, subscription automation and GitHub update workflow",
   "main": "src/main.js",
   "scripts": {
