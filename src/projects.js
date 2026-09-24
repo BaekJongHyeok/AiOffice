@@ -342,26 +342,33 @@
   }
 
   function ensureTaskButtons() {
-    document.querySelectorAll('.task-item').forEach(card => {
-      const action = card.querySelector('.mini-actions');
-      if (!action || action.querySelector('.task-edit-btn')) return;
-      const any = action.querySelector('[data-id]');
-      if (!any) return;
-      const id = any.dataset.id;
+    document.querySelectorAll('.task-item[data-task-id]').forEach(card => {
+      let action = card.querySelector('.mini-actions');
+      if (!action) {
+        action = document.createElement('div');
+        action.className = 'mini-actions';
+        card.appendChild(action);
+      }
+      if (action.querySelector('.task-delete-btn')) return;
 
-      const edit = document.createElement('button');
-      edit.className = 'text-btn task-edit-btn';
-      edit.textContent = '수정';
-      edit.dataset.id = id;
-      edit.onclick = () => editTask(id);
+      const id = card.dataset.taskId;
+      const task = state.tasks.find(t => t.id === id);
+      if (!task) return;
+
+      if (task.status !== 'done') {
+        const edit = document.createElement('button');
+        edit.className = 'text-btn task-edit-btn';
+        edit.textContent = '수정';
+        edit.dataset.id = id;
+        edit.onclick = () => editTask(id);
+        action.appendChild(edit);
+      }
 
       const del = document.createElement('button');
       del.className = 'text-btn task-delete-btn';
       del.textContent = '삭제';
       del.dataset.id = id;
       del.onclick = () => deleteTask(id);
-
-      action.appendChild(edit);
       action.appendChild(del);
     });
   }
