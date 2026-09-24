@@ -350,7 +350,8 @@
   }
 
   function clampOfficePoint([x,y]) {
-    return [Math.max(3,Math.min(97,x)),Math.max(8,Math.min(96,y))];
+    const activitySafeBottom=82;
+    return [Math.max(3,Math.min(97,x)),Math.max(8,Math.min(activitySafeBottom,y))];
   }
 
   function furnitureByType(type) {
@@ -812,7 +813,7 @@
     updateSelectedEmployeeStyles();
   });
   const version = document.querySelector('.sidebar-foot small');
-  if (version) version.textContent = 'v1.3.3 · Seat Spread';
+  if (version) version.textContent = 'v1.3.4 · Activity Safe Zone';
 
   try {
     renderOffice = renderCompanyOffice;
