@@ -424,3 +424,15 @@
 .game-office .popover-avatar .asset-pixel-avatar.large{
   transform:scale(1.06);
 }
+
+/* v0.7.1 visual balance */
+.game-office .sim-employee{width:104px;height:126px;transform:translate(-50%,-82%);transition:left 1.05s ease,top 1.05s ease,transform .25s ease}
+.game-office .employee-character{top:24px;left:50%;transform:translateX(-50%);width:100px;height:104px;display:flex;align-items:flex-end;justify-content:center}
+.game-office .employee-character img,.game-office .staff-sprite,.game-office .asset-staff-sprite{width:96px!important;height:112px!important;max-width:none;object-fit:contain;image-rendering:pixelated;filter:drop-shadow(0 5px 3px #0007)}
+.game-office .employee-status-bubble{top:0;left:50%;transform:translateX(-50%);min-width:76px;max-width:100px;padding:3px 5px;border-width:1px;border-radius:5px;white-space:nowrap}
+.game-office .employee-status-bubble b{font-size:8px}.game-office .employee-status-bubble small{display:none}
+.game-office .employee-task-caption{display:none!important}
+.game-office .sim-employee:not(.selected):not(.sim-moving):not(.sim-moving-report):not(.sim-reporting):not(.sim-ceo-report) .employee-status-bubble{background:#18283bd9}
+.game-office .sim-employee.selected .employee-status-bubble{box-shadow:0 0 0 2px #77aaff,0 4px 10px #0006}
+.game-office .sim-employee:hover{z-index:15;transform:translate(-50%,-84%) scale(1.06)}
+.game-office .office-activity{max-height:78px;overflow:hidden;opacity:.92}

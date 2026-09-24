@@ -214,17 +214,17 @@
   function employeePosition(employee,index,visualState) {
     const role=employeeRoleType(employee);
     const roleSlots={
-      planning:[[16,48],[27,51]],
-      marketing:[[43,48],[55,51]],
-      development:[[16,68],[30,69]],
-      design:[[45,68],[59,69]],
-      analysis:[[27,83],[41,83]],
-      qa:[[54,83],[65,82]],
-      leader:[[68,67],[61,78]],
+      planning:[[18,52],[31,52]],
+      marketing:[[48,52],[60,52]],
+      development:[[18,73],[31,73]],
+      design:[[48,73],[60,73]],
+      analysis:[[73,54],[73,65]],
+      qa:[[82,54],[82,65]],
+      leader:[[70,76],[82,76]],
     };
     const slots=roleSlots[role]||roleSlots.planning;
     const base=slots[index%slots.length];
-    const manager=[68,66], meeting=[58,21], ceo=[22,20];
+    const manager=[73,69], meeting=[58,20], ceo=[22,20];
 
     if(visualState==='meeting') return meeting;
     if(visualState==='reporting'||visualState==='moving-report') return manager;
