@@ -347,19 +347,19 @@
 
   function deskSeatPoints(item) {
     const x=item.x,y=item.y,w=item.w,h=item.h;
-    const seat=(rx,ry,facing='up')=>({point:clampOfficePoint([x+w*rx,y+h*ry]),facing});
+    const spot=(rx,ry,facing='up')=>({point:clampOfficePoint([x+w*rx,y+h*ry]),facing});
     if(item.type==='desk-1p') return [
-      seat(.50,.78,'up'),
+      spot(.50,1.04,'up'),
     ];
     if(item.type==='desk-2p') return [
-      seat(.30,.79,'up'),
-      seat(.70,.79,'up'),
+      spot(.28,1.04,'up'),
+      spot(.72,1.04,'up'),
     ];
     if(item.type==='workstation-4p') return [
-      seat(.28,.39,'down'),
-      seat(.72,.39,'down'),
-      seat(.28,.80,'up'),
-      seat(.72,.80,'up'),
+      spot(.24,1.02,'up'),
+      spot(.43,1.02,'up'),
+      spot(.62,1.02,'up'),
+      spot(.81,1.02,'up'),
     ];
     return [];
   }
@@ -413,8 +413,7 @@
     if(visualState==='meeting') return {point:meetingSeatForEmployee(employee,index),facing:'down',seated:false};
     if(visualState==='reporting'||visualState==='moving-report') return {point:managerReportPoint(),facing:'down',seated:false};
     if(visualState==='ceo-report') return {point:ceoReportPoint(),facing:'down',seated:false};
-    const seated=['working','idle','done','blocked'].includes(visualState);
-    return {point:home.point,facing:home.facing||'up',seated};
+    return {point:home.point,facing:home.facing||'up',seated:false};
   }
 
   function employeePosition(employee,index,visualState) {
@@ -719,7 +718,7 @@
     updateSelectedEmployeeStyles();
   });
   const version = document.querySelector('.sidebar-foot small');
-  if (version) version.textContent = 'v1.2.2 · Character Scale Fix';
+  if (version) version.textContent = 'v1.2.3 · Desk Position Fix';
 
   try {
     renderOffice = renderCompanyOffice;
