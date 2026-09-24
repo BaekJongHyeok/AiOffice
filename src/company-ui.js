@@ -7,7 +7,26 @@
     tick: null,
     dialogSignature: '',
     openReportId: null,
+    layoutEdit: false,
+    selectedFurnitureId: null,
   };
+
+  const defaultFurniture = [
+    {id:'desk-a',type:'desk',label:'책상',x:10,y:43,w:22,h:12},
+    {id:'desk-b',type:'desk',label:'책상',x:36,y:43,w:22,h:12},
+    {id:'desk-c',type:'desk',label:'책상',x:10,y:67,w:22,h:12},
+    {id:'desk-d',type:'desk',label:'책상',x:36,y:67,w:22,h:12},
+    {id:'meeting',type:'meeting',label:'회의 테이블',x:50,y:8,w:28,h:18},
+    {id:'sofa',type:'sofa',label:'소파',x:8,y:12,w:24,h:12},
+    {id:'server',type:'server',label:'서버 랙',x:82,y:7,w:12,h:20},
+    {id:'shelf',type:'shelf',label:'책장',x:69,y:42,w:12,h:14},
+    {id:'plant-a',type:'plant',label:'화분',x:63,y:34,w:5,h:8},
+    {id:'plant-b',type:'plant',label:'화분',x:78,y:72,w:5,h:8},
+    {id:'lounge',type:'table',label:'휴게 테이블',x:68,y:82,w:18,h:12},
+  ];
+  const loadFurniture=()=>{try{return JSON.parse(localStorage.getItem('aiOfficeFurnitureV1'))||defaultFurniture}catch{return defaultFurniture}};
+  let furniture=loadFurniture();
+  const saveFurniture=()=>localStorage.setItem('aiOfficeFurnitureV1',JSON.stringify(furniture));
 
   const rolePalette = (employee) => {
     const style = employee.spriteStyle || 'auto';
@@ -96,48 +115,15 @@
 
       <div class="company-layout game-company-layout">
         <section class="sim-office card game-office">
-          <div class="office-skyline"></div>
-          <div class="office-floor-grid"></div>
-
-          <div class="game-room ceo-suite">
-            <div class="game-room-title">CEO실</div>
-            <div class="executive-desk"></div>
-            <div class="office-sofa sofa-a"></div>
-            <div class="office-sofa sofa-b"></div>
-            <div class="plant plant-a">🪴</div>
-            <div class="bookshelf shelf-a"></div>
+          <div class="editable-office-floor"></div>
+          <div id="officeFurniture" class="office-furniture"></div>
+          <div class="layout-editor-bar">
+            <button id="layoutEditBtn" class="layout-edit-btn">✥ 배치 편집</button>
+            <div id="layoutTools" class="layout-tools">
+              <button data-add="desk">+ 책상</button><button data-add="sofa">+ 소파</button><button data-add="plant">+ 화분</button><button data-add="shelf">+ 책장</button><button data-add="table">+ 테이블</button>
+              <button id="layoutDeleteBtn">삭제</button><button id="layoutResetBtn">초기화</button><button id="layoutDoneBtn" class="primary">완료</button>
+            </div>
           </div>
-
-          <div class="game-room meeting-suite">
-            <div class="game-room-title">회의실</div>
-            <div class="conference-table"></div>
-            <div class="meeting-screen"><span></span></div>
-            <div class="plant meeting-plant">🌿</div>
-          </div>
-
-          <div class="game-room server-suite">
-            <div class="game-room-title">서버실</div>
-            <div class="server-rack rack-a"></div>
-            <div class="server-rack rack-b"></div>
-          </div>
-
-          <div class="game-zone zone-planning"><span>기획팀</span><div class="zone-furniture"></div></div>
-          <div class="game-zone zone-marketing"><span>마케팅팀</span><div class="zone-furniture"></div></div>
-          <div class="game-zone zone-development"><span>개발팀</span><div class="zone-furniture"></div></div>
-          <div class="game-zone zone-design"><span>디자인팀</span><div class="zone-furniture"></div></div>
-          <div class="game-zone zone-analysis"><span>분석 / QA</span><div class="zone-furniture"></div></div>
-
-          <div class="game-room lounge-suite">
-            <div class="game-room-title">휴게실</div>
-            <div class="lounge-table"></div>
-            <div class="lounge-sofa"></div>
-            <div class="water-cooler"></div>
-          </div>
-
-          <div class="hallway-decor hplant-1">🪴</div>
-          <div class="hallway-decor hplant-2">🌿</div>
-          <div class="hallway-decor coffee-machine">☕</div>
-          <div class="hallway-decor office-cat">🐈</div>
 
           <div id="simEmployees" class="sim-employees"></div>
           <div id="employeeDialogHost" class="employee-dialog-host"></div>
@@ -183,6 +169,14 @@
       </div>
     `;
 
+    renderFurniture();
+    const editBtn=document.querySelector('#layoutEditBtn'), tools=document.querySelector('#layoutTools');
+    editBtn?.addEventListener('click',()=>{companyUI.layoutEdit=true;document.querySelector('.game-office')?.classList.add('layout-editing');tools?.classList.add('show');editBtn.style.display='none';renderFurniture()});
+    document.querySelector('#layoutDoneBtn')?.addEventListener('click',()=>{companyUI.layoutEdit=false;companyUI.selectedFurnitureId=null;document.querySelector('.game-office')?.classList.remove('layout-editing');tools?.classList.remove('show');if(editBtn)editBtn.style.display='';saveFurniture();renderFurniture()});
+    tools?.querySelectorAll('[data-add]').forEach(btn=>btn.addEventListener('click',()=>{const type=btn.dataset.add;furniture.push({id:'f-'+Date.now(),type,label:btn.textContent.replace('+ ','') ,x:44,y:55,w:type==='plant'?5:16,h:type==='plant'?8:11});saveFurniture();renderFurniture()}));
+    document.querySelector('#layoutDeleteBtn')?.addEventListener('click',()=>{if(!companyUI.selectedFurnitureId)return;furniture=furniture.filter(x=>x.id!==companyUI.selectedFurnitureId);companyUI.selectedFurnitureId=null;saveFurniture();renderFurniture()});
+    document.querySelector('#layoutResetBtn')?.addEventListener('click',()=>{furniture=defaultFurniture.map(x=>({...x}));companyUI.selectedFurnitureId=null;saveFurniture();renderFurniture()});
+
     const selectAll = document.querySelector('#selectAllBtnCompany');
     const run = document.querySelector('#runTaskBtnCompany');
     if (selectAll) selectAll.onclick = () => document.querySelectorAll('#assigneeList input').forEach(x => x.checked = true);
@@ -195,6 +189,22 @@
       }
       setTimeout(() => switchView('office'), 20);
     };
+  }
+
+
+  function renderFurniture(){
+    const host=document.querySelector('#officeFurniture'); if(!host)return;
+    host.innerHTML=furniture.map(item=>`<button class="office-item item-${item.type} ${companyUI.selectedFurnitureId===item.id?'selected':''}" data-id="${item.id}" style="left:${item.x}%;top:${item.y}%;width:${item.w}%;height:${item.h}%"><span>${item.label}</span></button>`).join('');
+    host.querySelectorAll('.office-item').forEach(el=>{
+      el.onclick=(ev)=>{if(!companyUI.layoutEdit)return;ev.stopPropagation();companyUI.selectedFurnitureId=el.dataset.id;renderFurniture()};
+      el.onpointerdown=(ev)=>{
+        if(!companyUI.layoutEdit)return;ev.preventDefault();ev.stopPropagation();companyUI.selectedFurnitureId=el.dataset.id;
+        const item=furniture.find(x=>x.id===el.dataset.id), office=document.querySelector('.game-office'), rect=office.getBoundingClientRect();
+        const move=(e)=>{item.x=Math.max(0,Math.min(100-item.w,((e.clientX-rect.left)/rect.width*100)-item.w/2));item.y=Math.max(0,Math.min(100-item.h,((e.clientY-rect.top)/rect.height*100)-item.h/2));el.style.left=item.x+'%';el.style.top=item.y+'%'};
+        const up=()=>{window.removeEventListener('pointermove',move);window.removeEventListener('pointerup',up);saveFurniture();renderFurniture()};
+        window.addEventListener('pointermove',move);window.addEventListener('pointerup',up);
+      };
+    });
   }
 
 
@@ -528,7 +538,7 @@
     updateSelectedEmployeeStyles();
   });
   const version = document.querySelector('.sidebar-foot small');
-  if (version) version.textContent = 'v0.7.5 · Portrait Center';
+  if (version) version.textContent = 'v0.8.0 · Layout Editor';
 
   try {
     renderOffice = renderCompanyOffice;
