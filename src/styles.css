@@ -652,3 +652,44 @@ body{overflow:hidden}.app-shell{height:100vh;min-height:0;overflow:hidden}main{h
 @keyframes seatedWorkV2{
   to{transform:translateY(9px)}
 }
+
+/* v1.2.3 stop faking seated sprites; keep staff full-size in front of desks */
+.game-office .sim-employee{
+  width:110px!important;
+  height:118px!important;
+  transform:translate(-50%,-62%)!important;
+}
+.game-office .employee-character{
+  top:27px!important;
+  width:80px!important;
+  height:80px!important;
+  overflow:visible!important;
+}
+.game-office .asset-pixel-avatar{
+  width:80px!important;
+  height:80px!important;
+  transform:none!important;
+}
+.game-office .asset-pixel-avatar .asset-sprite{
+  width:80px!important;
+  height:80px!important;
+  background-size:560px 80px!important;
+}
+.game-office .seat-seated .employee-character,
+.game-office .seat-seated .asset-pixel-avatar,
+.game-office .seat-facing-down .asset-pixel-avatar,
+.game-office .seat-seated.seat-facing-down .asset-pixel-avatar{
+  transform:none!important;
+  overflow:visible!important;
+  height:80px!important;
+  top:27px!important;
+}
+.game-office .employee-status-bubble{
+  top:-4px!important;
+  min-width:70px!important;
+  max-width:104px!important;
+  padding:3px 6px!important;
+  z-index:20!important;
+}
+.game-office .employee-status-bubble b{font-size:8.5px!important}
+.game-office .sim-working .employee-character{animation:typingBob .45s infinite alternate!important}
