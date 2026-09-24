@@ -17,7 +17,7 @@
         <button class="nav" data-view="reports">📨 보고함 <span id="reportBadge" class="badge">0</span></button>
         <button class="nav" data-view="settings">🔗 구독 연결</button>
       </nav>
-      <div class="sidebar-foot"><button id="updateAppBtn" class="btn ghost update-btn">↻ 업데이트 & 재시작</button><span class="status-dot"></span> API 과금 없는 모드<br><small>v0.2.2 · Git Update</small></div>
+      <div class="sidebar-foot"><button id="updateAppBtn" class="btn ghost update-btn">↻ 업데이트 & 재시작</button><span class="status-dot"></span> API 과금 없는 모드<br><small>v0.3.0 · Subscription Automation</small></div>
     </aside>
 
     <main>
@@ -41,7 +41,7 @@
             <label>업무를 맡길 직원</label>
             <div id="assigneeList" class="assignee-list"></div>
             <div class="command-row"><button id="selectAllBtn" class="btn ghost">전체 선택</button><button id="runTaskBtn" class="btn primary">▶ 업무 배정</button></div>
-            <div class="hint">구독 직원은 업무 큐에 등록됩니다. AI 창을 열면 역할 프롬프트가 클립보드에 복사됩니다.</div>
+            <div class="hint">구독 직원은 업무 큐에 등록됩니다. 자동 실행을 켜면 서비스별 큐에 따라 AI 창으로 전달하고 답변 회수를 시도합니다.</div>
           </div>
         </div>
         <div class="lower-grid">
@@ -70,7 +70,7 @@
         <div class="card settings-card sub-help">
           <h2>이 방식은 어떻게 작동하나요?</h2>
           <p class="muted">각 서비스 버튼을 누르면 AI OFFICE 전용 브라우저 세션이 열립니다. 그 창에서 직접 로그인하면 세션이 PC에 유지됩니다. AI OFFICE는 계정 비밀번호를 입력받거나 저장하지 않습니다.</p>
-          <div class="tip"><b>중요:</b> 이 버전은 유료 API를 전혀 호출하지 않습니다. 다만 각 구독 서비스 자체의 메시지/사용량 한도는 그대로 적용됩니다. 웹 UI 자동조작은 서비스 변경에 쉽게 깨질 수 있어 v0.2에서는 안전한 작업 큐 + 구독창 연결 방식으로 구현했습니다.</div>
+          <div class="tip"><b>중요:</b> 이 버전은 유료 API를 전혀 호출하지 않습니다. 다만 각 구독 서비스 자체의 메시지/사용량 한도는 그대로 적용됩니다. v0.3 자동 전달/회수는 웹 UI 변화에 영향을 받는 실험 기능입니다. 실패하면 기존 수동 방식으로 계속 사용할 수 있습니다.</div>
         </div>
       </section>
     </main>
@@ -101,6 +101,6 @@
     </div>
   </div>
 
-  <script src="renderer.js"></script>
+  <script src="renderer.js"></script>\n  <script src="automation.js"></script>
 </body>
 </html>
