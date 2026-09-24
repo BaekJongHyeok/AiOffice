@@ -497,3 +497,6 @@ body{overflow:hidden}.app-shell{height:100vh;min-height:0;overflow:hidden}main{h
 .layout-editing .office-item.pixel-furniture{outline:1px dashed #ffffff88!important;border-radius:4px}
 .layout-editing .office-item.pixel-furniture:hover,.layout-editing .office-item.pixel-furniture.selected{outline:3px solid #4b9cff!important;filter:none!important}
 .layout-editing .office-item.pixel-furniture.selected .furniture-sprite{filter:drop-shadow(0 0 5px #4b9cff) drop-shadow(0 6px 4px #0005)}
+
+/* v0.9.0 individual furniture image sizing */
+.office-item.pixel-furniture .furniture-sprite{width:100%!important;height:100%!important;object-fit:contain!important;object-position:center bottom!important;background:none!important}
