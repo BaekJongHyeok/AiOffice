@@ -732,10 +732,7 @@
           }
           if(companyUI.layoutEdit) return;
           event.stopPropagation();
-          if(employee.id==='__ceo__'){
-            document.querySelector('#ceoSettingsBtn')?.click();
-            return;
-          }
+          if(employee.id==='__ceo__') return;
           companyUI.selectedEmployeeId = companyUI.selectedEmployeeId === el.dataset.id ? null : el.dataset.id;
           companyUI.openReportId = null;
           companyUI.dialogSignature = '';
@@ -1081,7 +1078,7 @@
     updateSelectedEmployeeStyles();
   });
   const version = document.querySelector('.sidebar-foot small');
-  if (version) version.textContent = 'v1.6.4 · Character Render Fix';
+  if (version) version.textContent = 'v1.6.5 · CEO Drag Only';
 
   try {
     renderOffice = renderCompanyOffice;
