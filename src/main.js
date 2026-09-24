@@ -46,7 +46,7 @@ async function ensureProviderWindow(provider, prompt = '', options = {}) {
     width: 1180, height: 820, show,
     title: `AI OFFICE · ${info.name}`,
     backgroundColor: '#10141f',
-    webPreferences: { partition: getPartition(provider), contextIsolation: true, nodeIntegration: false, sandbox: true },
+    webPreferences: { partition: getPartition(provider), contextIsolation: true, nodeIntegration: false, sandbox: true, backgroundThrottling: false },
   });
   providerWindows.set(provider, win);
   win.on('closed', () => providerWindows.delete(provider));
@@ -71,34 +71,50 @@ function automationScript(prompt) {
   return `(() => {
     const prompt = ${safePrompt};
     const visible = (el) => !!(el && el.getClientRects().length && !el.disabled);
-    const candidates = [
-      document.querySelector('#prompt-textarea'),
-      document.querySelector('textarea[placeholder*="Message"]'),
-      document.querySelector('textarea[placeholder*="메시지"]'),
-      document.querySelector('textarea'),
-      ...document.querySelectorAll('[contenteditable="true"]')
-    ].filter(visible);
-    const input = candidates[candidates.length - 1];
-    if (!input) return { ok:false, stage:'input', error:'입력창을 찾지 못했습니다.' };
+    const input =
+      document.querySelector('#prompt-textarea[contenteditable="true"]') ||
+      document.querySelector('#prompt-textarea[contenteditable="plaintext-only"]') ||
+      document.querySelector('#prompt-textarea') ||
+      document.querySelector('textarea[placeholder*="Message"]') ||
+      document.querySelector('textarea[placeholder*="메시지"]') ||
+      document.querySelector('textarea') ||
+      [...document.querySelectorAll('[contenteditable="true"],[contenteditable="plaintext-only"]')].filter(visible).pop();
+
+    if (!input || !visible(input)) return { ok:false, stage:'input', retryable:true, error:'입력창을 찾지 못했습니다.' };
+
     input.focus();
+
     if (input.tagName === 'TEXTAREA' || input.tagName === 'INPUT') {
-      const setter = Object.getOwnPropertyDescriptor(Object.getPrototypeOf(input), 'value')?.set;
+      const proto = Object.getPrototypeOf(input);
+      const setter = Object.getOwnPropertyDescriptor(proto, 'value')?.set;
       if (setter) setter.call(input, prompt); else input.value = prompt;
       input.dispatchEvent(new Event('input', { bubbles:true }));
       input.dispatchEvent(new Event('change', { bubbles:true }));
     } else {
-      input.textContent = prompt;
+      const selection = window.getSelection();
+      const range = document.createRange();
+      range.selectNodeContents(input);
+      selection.removeAllRanges();
+      selection.addRange(range);
+      document.execCommand('delete', false, null);
+      document.execCommand('insertText', false, prompt);
       input.dispatchEvent(new InputEvent('input', { bubbles:true, inputType:'insertText', data:prompt }));
     }
-    const buttons = [...document.querySelectorAll('button')].filter(visible);
-    const send = buttons.find(b => {
-      const a = ((b.getAttribute('aria-label')||'') + ' ' + (b.getAttribute('data-testid')||'') + ' ' + (b.title||'')).toLowerCase();
-      return /send|submit|보내|전송/.test(a);
-    });
-    if (send) { send.click(); return { ok:true, stage:'submitted', method:'button' }; }
-    input.dispatchEvent(new KeyboardEvent('keydown',{key:'Enter',code:'Enter',keyCode:13,which:13,bubbles:true}));
-    input.dispatchEvent(new KeyboardEvent('keyup',{key:'Enter',code:'Enter',keyCode:13,which:13,bubbles:true}));
-    return { ok:true, stage:'submitted', method:'enter' };
+
+    const send =
+      document.querySelector('#composer-submit-button') ||
+      document.querySelector('button[data-testid="send-button"]') ||
+      [...document.querySelectorAll('button')].filter(visible).find((b) => {
+        const a = ((b.getAttribute('aria-label')||'') + ' ' + (b.getAttribute('data-testid')||'') + ' ' + (b.title||'')).toLowerCase();
+        return /send|submit|보내|전송/.test(a);
+      });
+
+    if (send && visible(send) && send.getAttribute('aria-disabled') !== 'true') {
+      send.click();
+      return { ok:true, stage:'submitted', method:'button' };
+    }
+
+    return { ok:false, stage:'send', retryable:true, error:'전송 버튼이 아직 준비되지 않았습니다.' };
   })()`;
 }
 
@@ -130,11 +146,26 @@ async function automateSubscription(provider, prompt) {
   }
 
   const win = await ensureProviderWindow(provider, prompt, { show:false });
-  await sleep(1200);
-  let submit;
-  try { submit = await win.webContents.executeJavaScript(automationScript(prompt), true); }
-  catch (e) { return { ok:false, stage:'inject', error:e.message }; }
-  if (!submit?.ok) return submit || { ok:false, error:'자동 입력에 실패했습니다.' };
+  await sleep(800);
+
+  let submit = null;
+  for (let attempt = 0; attempt < 20; attempt++) {
+    try {
+      submit = await win.webContents.executeJavaScript(automationScript(prompt), true);
+    } catch (e) {
+      submit = { ok:false, stage:'inject', retryable:true, error:e.message };
+    }
+    if (submit?.ok) break;
+    if (!submit?.retryable) return submit || { ok:false, error:'자동 입력에 실패했습니다.' };
+    await sleep(500);
+  }
+  if (!submit?.ok) {
+    return {
+      ...(submit || {}),
+      ok:false,
+      error:submit?.error || '입력창 또는 전송 버튼을 준비하지 못했습니다.'
+    };
+  }
 
   let last = '';
   let stable = 0;
