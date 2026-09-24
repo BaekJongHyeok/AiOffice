@@ -467,3 +467,7 @@ body{overflow:hidden}.app-shell{height:100vh;min-height:0;overflow:hidden}main{h
 .game-office .popover-avatar{width:78px;height:94px;position:relative;overflow:hidden;align-self:center}
 .game-office .popover-avatar .asset-staff-sprite,.game-office .popover-avatar .staff-sprite,.game-office .popover-avatar img{position:absolute!important;width:88px!important;height:108px!important;max-width:none!important;left:50%!important;top:-10px!important;bottom:auto!important;transform:translateX(-50%)!important;object-fit:contain;object-position:center top!important;margin:0!important}
 .game-office .popover-profile{grid-template-columns:78px 1fr;min-height:94px;align-items:center}
+
+/* v0.7.5 center employee portrait in profile frame */
+.game-office .popover-avatar{display:flex!important;align-items:center!important;justify-content:center!important}
+.game-office .popover-avatar .asset-staff-sprite,.game-office .popover-avatar .staff-sprite,.game-office .popover-avatar img{position:relative!important;left:auto!important;top:auto!important;bottom:auto!important;transform:none!important;width:78px!important;height:88px!important;max-width:78px!important;object-fit:contain!important;object-position:center center!important;margin:0!important}
