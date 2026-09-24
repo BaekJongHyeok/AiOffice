@@ -1185,7 +1185,7 @@
     updateSelectedEmployeeStyles();
   });
   const version = document.querySelector('.sidebar-foot small');
-  if (version) version.textContent = 'v1.5.9 · Dialog Layer Fix';
+  if (version) version.textContent = 'v1.6.0 · CEO Hitbox Align';
 
   try {
     renderOffice = renderCompanyOffice;
