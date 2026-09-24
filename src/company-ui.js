@@ -8,21 +8,25 @@
   };
 
   const rolePalette = (employee) => {
+    const style = employee.spriteStyle || 'auto';
     const s = `${employee.department || ''} ${employee.role || ''}`.toLowerCase();
-    if (/마케팅|콘텐츠/.test(s)) return { main:'#f65ca8', dark:'#8f285f', accent:'#ffd2e8' };
-    if (/개발|엔지니어|코드/.test(s)) return { main:'#58a6ff', dark:'#245c9a', accent:'#d3e8ff' };
-    if (/디자인/.test(s)) return { main:'#a875ff', dark:'#5938a0', accent:'#eadcff' };
-    if (/qa|검수|품질/.test(s)) return { main:'#54d39a', dark:'#237a58', accent:'#d6f8e9' };
-    if (/분석|데이터|리서치/.test(s)) return { main:'#44d77b', dark:'#237044', accent:'#d8ffe5' };
-    if (/팀장|대표|ceo/.test(`${employee.rank || ''} ${employee.role || ''}`.toLowerCase())) return { main:'#f3b64e', dark:'#9a651a', accent:'#fff0c6' };
+    if (style === 'marketing' || (style === 'auto' && /마케팅|콘텐츠/.test(s))) return { main:'#f65ca8', dark:'#8f285f', accent:'#ffd2e8' };
+    if (style === 'development' || (style === 'auto' && /개발|엔지니어|코드/.test(s))) return { main:'#58a6ff', dark:'#245c9a', accent:'#d3e8ff' };
+    if (style === 'design' || (style === 'auto' && /디자인/.test(s))) return { main:'#a875ff', dark:'#5938a0', accent:'#eadcff' };
+    if (style === 'qa' || (style === 'auto' && /qa|검수|품질/.test(s))) return { main:'#54d39a', dark:'#237a58', accent:'#d6f8e9' };
+    if (style === 'analysis' || (style === 'auto' && /분석|데이터|리서치/.test(s))) return { main:'#44d77b', dark:'#237044', accent:'#d8ffe5' };
+    if (style === 'leader' || (style === 'auto' && /팀장|대표|ceo/.test(`${employee.rank || ''} ${employee.role || ''}`.toLowerCase()))) return { main:'#f3b64e', dark:'#9a651a', accent:'#fff0c6' };
+    if (style === 'planning') return { main:'#7c8cff', dark:'#4050a6', accent:'#dfe3ff' };
     return { main:'#7c8cff', dark:'#4050a6', accent:'#dfe3ff' };
   };
 
   function pixelAvatar(employee, status='idle', large=false) {
     const p = rolePalette(employee);
     const hair = employee.id ? ['#332016','#171922','#4a2a25','#1d2734'][Math.abs(hashCode(employee.id)) % 4] : '#302018';
-    const glasses = /개발|분석|qa|검수/.test(`${employee.department} ${employee.role}`.toLowerCase());
-    const accessory = /마케팅/.test(`${employee.department} ${employee.role}`) ? '🎧' : /디자인/.test(`${employee.department} ${employee.role}`) ? '✏️' : '';
+    const styleKey = employee.spriteStyle || 'auto';
+    const combined = `${employee.department} ${employee.role}`.toLowerCase();
+    const glasses = ['development','analysis','qa'].includes(styleKey) || (styleKey === 'auto' && /개발|분석|qa|검수/.test(combined));
+    const accessory = styleKey === 'marketing' || (styleKey === 'auto' && /마케팅/.test(combined)) ? '🎧' : styleKey === 'design' || (styleKey === 'auto' && /디자인/.test(combined)) ? '✏️' : '';
     const cls = large ? 'pixel-avatar large' : 'pixel-avatar';
     return `
       <div class="${cls} state-${status}" style="--role:${p.main};--role-dark:${p.dark};--hair:${hair};--accent:${p.accent}">
