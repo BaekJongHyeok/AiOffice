@@ -347,16 +347,19 @@
 
   function deskSeatPoints(item) {
     const x=item.x,y=item.y,w=item.w,h=item.h;
-    if(item.type==='desk-1p') return [clampOfficePoint([x+w*.50,y+h*.88])];
+    const seat=(rx,ry,facing='up')=>({point:clampOfficePoint([x+w*rx,y+h*ry]),facing});
+    if(item.type==='desk-1p') return [
+      seat(.50,.78,'up'),
+    ];
     if(item.type==='desk-2p') return [
-      clampOfficePoint([x+w*.31,y+h*.88]),
-      clampOfficePoint([x+w*.69,y+h*.88]),
+      seat(.30,.79,'up'),
+      seat(.70,.79,'up'),
     ];
     if(item.type==='workstation-4p') return [
-      clampOfficePoint([x+w*.27,y+h*.46]),
-      clampOfficePoint([x+w*.73,y+h*.46]),
-      clampOfficePoint([x+w*.27,y+h*.93]),
-      clampOfficePoint([x+w*.73,y+h*.93]),
+      seat(.28,.39,'down'),
+      seat(.72,.39,'down'),
+      seat(.28,.80,'up'),
+      seat(.72,.80,'up'),
     ];
     return [];
   }
@@ -366,15 +369,15 @@
     return furniture
       .filter(item=>deskTypes.includes(item.type))
       .sort((a,b)=>(a.y-b.y)||(a.x-b.x))
-      .flatMap(item=>deskSeatPoints(item).map((point,seatIndex)=>({point,furnitureId:item.id,seatIndex})));
+      .flatMap(item=>deskSeatPoints(item).map((seat,seatIndex)=>({...seat,furnitureId:item.id,seatIndex})));
   }
 
   function homeSeatForEmployee(employee,index) {
     const employees=state.employees.slice(0,9);
     const seats=allWorkSeats();
-    if(!seats.length) return [18+(index%3)*18,52+Math.floor(index/3)*18];
+    if(!seats.length) return {point:[18+(index%3)*18,52+Math.floor(index/3)*18],facing:'up'};
     const employeeIndex=Math.max(0,employees.findIndex(e=>e.id===employee.id));
-    return seats[employeeIndex%seats.length].point;
+    return seats[employeeIndex%seats.length];
   }
 
   function meetingSeatForEmployee(employee,index) {
@@ -397,19 +400,25 @@
     const leaderIndex=state.employees.findIndex(e=>employeeRoleType(e)==='leader');
     if(leaderIndex>=0){
       const leader=state.employees[leaderIndex];
-      const [x,y]=homeSeatForEmployee(leader,leaderIndex);
+      const seat=homeSeatForEmployee(leader,leaderIndex);
+      const [x,y]=seat.point;
       return clampOfficePoint([x+4,y+1]);
     }
     const seats=allWorkSeats();
     return seats.length ? clampOfficePoint([seats[seats.length-1].point[0]+4,seats[seats.length-1].point[1]]) : [73,69];
   }
 
-  function employeePosition(employee,index,visualState) {
+  function employeePlacement(employee,index,visualState) {
     const home=homeSeatForEmployee(employee,index);
-    if(visualState==='meeting') return meetingSeatForEmployee(employee,index);
-    if(visualState==='reporting'||visualState==='moving-report') return managerReportPoint();
-    if(visualState==='ceo-report') return ceoReportPoint();
-    return home;
+    if(visualState==='meeting') return {point:meetingSeatForEmployee(employee,index),facing:'down',seated:false};
+    if(visualState==='reporting'||visualState==='moving-report') return {point:managerReportPoint(),facing:'down',seated:false};
+    if(visualState==='ceo-report') return {point:ceoReportPoint(),facing:'down',seated:false};
+    const seated=['working','idle','done','blocked'].includes(visualState);
+    return {point:home.point,facing:home.facing||'up',seated};
+  }
+
+  function employeePosition(employee,index,visualState) {
+    return employeePlacement(employee,index,visualState).point;
   }
 
   function renderCompanyOffice() {
@@ -430,7 +439,8 @@
 
     visibleEmployees.forEach((employee,index) => {
       const vstate = employeeVisualState(employee);
-      const pos = employeePosition(employee,index,vstate);
+      const placement = employeePlacement(employee,index,vstate);
+      const pos = placement.point;
       const meta = statusMeta[vstate] || statusMeta.idle;
       const task = activeTask(employee.id) || recentDoneTask(employee.id);
       const selected = companyUI.selectedEmployeeId === employee.id;
@@ -448,7 +458,6 @@
             <small></small>
           </div>
           <div class="employee-character"></div>
-          <div class="pixel-workstation"><span class="monitor"></span><span class="desk-line"></span></div>
           <div class="employee-task-caption"></div>
         `;
         el.onclick = (event) => {
@@ -464,7 +473,9 @@
 
       const previousState = el.dataset.visualState;
       el.dataset.visualState = vstate;
-      el.className = `sim-employee ${selected?'selected':''} sim-${vstate}`;
+      el.className = `sim-employee ${selected?'selected':''} sim-${vstate} ${placement.seated?'seat-seated':''} seat-facing-${placement.facing||'up'}`;
+      el.dataset.seated = placement.seated ? '1' : '0';
+      el.dataset.facing = placement.facing || 'up';
       el.style.setProperty('--x', `${pos[0]}%`);
       el.style.setProperty('--y', `${pos[1]}%`);
 
@@ -708,7 +719,7 @@
     updateSelectedEmployeeStyles();
   });
   const version = document.querySelector('.sidebar-foot small');
-  if (version) version.textContent = 'v1.2.0 · Furniture Linked Staff';
+  if (version) version.textContent = 'v1.2.1 · Seat Visual Fix';
 
   try {
     renderOffice = renderCompanyOffice;
