@@ -535,3 +535,18 @@ body{overflow:hidden}.app-shell{height:100vh;min-height:0;overflow:hidden}main{h
   pointer-events:none!important;background:transparent!important
 }
 .office-item.pixel-furniture .atlas-sprite{background-image:none!important}
+
+/* v1.1 interactive furniture layout */
+.layout-editing .office-furniture{z-index:40!important;pointer-events:auto!important}
+.layout-editing .office-item{pointer-events:auto!important;touch-action:none!important;user-select:none!important;-webkit-user-drag:none!important;cursor:grab!important}
+.layout-editing .office-item.dragging{cursor:grabbing!important;z-index:99!important}
+.layout-editing .sim-employees,.layout-editing .employee-dialog-host,.layout-editing .office-activity{pointer-events:none!important}
+.layout-editing .sim-employees{opacity:.55}
+.layout-editing .office-item.pixel-furniture{outline:1px dashed #d8ebffcc!important}
+.layout-editing .office-item.pixel-furniture.selected{outline:3px solid #2f8cff!important;background:#2f8cff12!important}
+.layout-editing .office-item.pixel-furniture.selected .real-furniture-image{filter:drop-shadow(0 0 5px #61a8ff) drop-shadow(0 6px 3px #0005)!important}
+.layout-editor-bar{max-width:calc(100% - 20px)}
+.layout-tools.show{display:grid!important;grid-template-columns:1fr auto;grid-template-areas:"help actions" "add add";gap:7px;align-items:center}
+.layout-help{grid-area:help;display:flex;flex-direction:column;gap:2px;min-width:190px;padding:2px 4px;color:#23314a}.layout-help b{font-size:10px}.layout-help span{font-size:8px;color:#64748b}
+.layout-add-group{grid-area:add;display:flex;gap:5px;flex-wrap:wrap}.layout-action-group{grid-area:actions;display:flex;gap:5px;align-items:center}
+.layout-action-group #layoutDeleteBtn{color:#c53b43;border-color:#e3b5b8;background:#fff7f7}
