@@ -77,6 +77,9 @@
     modal.querySelector('#projectName').value = '';
     modal.querySelector('#projectObjective').value = '';
     modal.classList.remove('hidden');
+    requestAnimationFrame(() => {
+      modal.querySelector('#projectName')?.focus({ preventScroll:true });
+    });
   }
 
   function projectPrompt(employee, project) {
@@ -223,8 +226,20 @@
     const workTasks = project.taskIds.map(id => state.tasks.find(t => t.id === id)).filter(Boolean);
     if (!workTasks.length || workTasks.some(t => t.status !== 'done')) return;
 
-    const reports = state.reports.filter(r => r.projectId === project.id && r.taskId && project.taskIds.includes(r.taskId));
-    if (reports.length < workTasks.length) return;
+    const reports = state.reports.filter(r => {
+      if (!(r.projectId === project.id && r.taskId && project.taskIds.includes(r.taskId))) return false;
+      const text = String(r.result || '').trim();
+      if (text.length < 120) return false;
+      const leakMarkers = ['[CEO 목표]', '[프로젝트]', '보고 형식:', '당신은 AI 회사'];
+      const leaks = leakMarkers.filter(marker => text.includes(marker)).length;
+      return leaks < 3;
+    });
+    if (reports.length < workTasks.length) {
+      project.status = 'blocked';
+      project.qualityError = '직원 보고 중 완성된 답변으로 인정할 수 없는 결과가 있습니다. 해당 업무를 다시 실행해 주세요.';
+      return;
+    }
+    project.qualityError = '';
 
     const manager = state.employees.find(e => e.id === project.managerId);
     if (!manager) {
@@ -335,7 +350,7 @@
       const work = p.taskIds.map(id => state.tasks.find(t => t.id === id)).filter(Boolean);
       const done = work.filter(t => t.status === 'done').length;
       const finalTask = p.finalTaskId ? state.tasks.find(t => t.id === p.finalTaskId) : null;
-      const statusLabel = p.status === 'done' ? '✅ 완료' : p.status === 'review' ? '🧑‍💼 팀장 취합' : p.status === 'blocked' ? '⚠ 차단' : '⚡ 진행중';
+      const statusLabel = p.status === 'done' ? '✅ 완료' : p.status === 'review' ? '🧑‍💼 팀장 취합' : p.status === 'blocked' ? '⚠ 보고 품질 확인 필요' : '⚡ 진행중';
       const finalReport = p.finalReportId ? state.reports.find(r => r.id === p.finalReportId) : null;
 
       return `
@@ -345,6 +360,7 @@
             <span class="project-status">${statusLabel}</span>
           </div>
           <div class="project-meta">팀장: ${escapeHtml(manager?.name || '없음')} · 직원 업무 ${done}/${work.length}</div>
+          ${p.qualityError ? `<div class="task-error">${escapeHtml(p.qualityError)}</div>` : ''}
           <div class="project-progress"><span style="width:${work.length ? Math.round(done/work.length*100) : 0}%"></span></div>
           <div class="project-task-list">
             ${work.map(t => `<div><span>${t.status==='done'?'✅':t.status==='working'?'⚡':'○'}</span> ${escapeHtml(t.employeeName)} · ${escapeHtml(t.task)}</div>`).join('')}
@@ -518,11 +534,22 @@
     renderProjects();
   };
 
-  const observer = new MutationObserver(() => {
-    ensureTaskManager();
-    ensureTaskButtons();
-  });
-  observer.observe(document.body, { childList:true, subtree:true });
+  let uiSyncPending = false;
+  const scheduleUiSync = () => {
+    if (uiSyncPending) return;
+    uiSyncPending = true;
+    requestAnimationFrame(() => {
+      uiSyncPending = false;
+      ensureTaskManager();
+      ensureTaskButtons();
+    });
+  };
+
+  const taskBoard = document.querySelector('#taskBoard');
+  const liveTasks = document.querySelector('#liveTasks');
+  const observer = new MutationObserver(scheduleUiSync);
+  if (taskBoard) observer.observe(taskBoard, { childList:true, subtree:true });
+  if (liveTasks) observer.observe(liveTasks, { childList:true, subtree:true });
 
   window.addEventListener('ai-office-task-completed', (event) => {
     const taskId = event?.detail?.taskId;
@@ -532,7 +559,7 @@
   ensureTaskManager();
   ensureTaskButtons();
   const version = document.querySelector('.sidebar-foot small');
-  if (version) version.textContent = 'v0.4.2 · Executive Report';
+  if (version) version.textContent = 'v0.4.3 · Report Quality';
 
   renderProjects();
 })();
