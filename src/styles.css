@@ -1125,3 +1125,8 @@ body{overflow:hidden}.app-shell{height:100vh;min-height:0;overflow:hidden}main{h
 .game-office .ceo-employee .employee-task-caption{
   display:none!important;
 }
+
+/* v1.6.2 CEO-only tighter nameplate gap */
+.game-office .ceo-employee .employee-status-bubble{
+  top:26px!important;
+}
