@@ -23,3 +23,7 @@
 .task-management-actions{display:flex;gap:8px}
 .task-error{margin-top:8px;padding:8px;border-radius:7px;background:#ff6b7d12;border:1px solid #ff6b7d35;color:#ff9cab;font-size:10px;line-height:1.45}
 .task-delete-btn{color:#ff8f9d!important}
+
+.project-final-report{margin-top:14px;padding:12px;border:1px solid #45d48355;background:#45d4830d;border-radius:9px}
+.project-final-report b{font-size:12px}
+.project-final-report p{margin:7px 0 0;color:#cfd7e8;font-size:11px;line-height:1.55}
