@@ -41,6 +41,13 @@
   }catch{return defaultFurniture.map(x=>({...x}))}};
   let furniture=loadFurniture();
   const saveFurniture=()=>localStorage.setItem('aiOfficeFurnitureV3',JSON.stringify(furniture));
+  const refreshEmployeeDestinations=()=>{
+    if(document.querySelector('#simEmployees')) {
+      renderCompanyOffice();
+      companyUI.dialogSignature='';
+      renderEmployeeDialog();
+    }
+  };
 
   const rolePalette = (employee) => {
     const style = employee.spriteStyle || 'auto';
@@ -209,6 +216,7 @@
       if(editBtn) editBtn.style.display='';
       saveFurniture();
       renderFurniture();
+      refreshEmployeeDestinations();
     };
     editBtn?.addEventListener('click',(ev)=>{ev.stopPropagation();enterLayoutEdit()});
     document.querySelector('#layoutDoneBtn')?.addEventListener('click',(ev)=>{ev.stopPropagation();leaveLayoutEdit()});
@@ -216,14 +224,14 @@
       ev.stopPropagation();
       const type=btn.dataset.add,preset=furnitureCatalog[type]; if(!preset)return;
       const item={id:'f-'+Date.now(),type,x:42,y:48,...preset};
-      furniture.push(item); companyUI.selectedFurnitureId=item.id; saveFurniture(); renderFurniture(); refreshSelectedFurnitureLabel();
+      furniture.push(item); companyUI.selectedFurnitureId=item.id; saveFurniture(); renderFurniture(); refreshSelectedFurnitureLabel(); refreshEmployeeDestinations();
     }));
     document.querySelector('#layoutDeleteBtn')?.addEventListener('click',(ev)=>{
       ev.stopPropagation(); if(!companyUI.selectedFurnitureId)return;
-      furniture=furniture.filter(x=>x.id!==companyUI.selectedFurnitureId); companyUI.selectedFurnitureId=null; saveFurniture(); renderFurniture(); refreshSelectedFurnitureLabel();
+      furniture=furniture.filter(x=>x.id!==companyUI.selectedFurnitureId); companyUI.selectedFurnitureId=null; saveFurniture(); renderFurniture(); refreshSelectedFurnitureLabel(); refreshEmployeeDestinations();
     });
     document.querySelector('#layoutResetBtn')?.addEventListener('click',(ev)=>{
-      ev.stopPropagation(); furniture=defaultFurniture.map(x=>({...x})); companyUI.selectedFurnitureId=null; saveFurniture(); renderFurniture(); refreshSelectedFurnitureLabel();
+      ev.stopPropagation(); furniture=defaultFurniture.map(x=>({...x})); companyUI.selectedFurnitureId=null; saveFurniture(); renderFurniture(); refreshSelectedFurnitureLabel(); refreshEmployeeDestinations();
     });
     office?.addEventListener('pointerdown',(ev)=>{
       if(!companyUI.layoutEdit) return;
@@ -306,7 +314,7 @@
           el.removeEventListener('pointermove',move);
           el.removeEventListener('pointerup',up);
           el.removeEventListener('pointercancel',up);
-          saveFurniture(); updateLabel();
+          saveFurniture(); updateLabel(); refreshEmployeeDestinations();
         };
         el.addEventListener('pointermove',move);
         el.addEventListener('pointerup',up);
@@ -329,25 +337,79 @@
     return 'planning';
   }
 
-  function employeePosition(employee,index,visualState) {
-    const role=employeeRoleType(employee);
-    const roleSlots={
-      planning:[[18,52],[31,52]],
-      marketing:[[48,52],[60,52]],
-      development:[[18,73],[31,73]],
-      design:[[48,73],[60,73]],
-      analysis:[[73,54],[73,65]],
-      qa:[[82,54],[82,65]],
-      leader:[[70,76],[82,76]],
-    };
-    const slots=roleSlots[role]||roleSlots.planning;
-    const base=slots[index%slots.length];
-    const manager=[73,69], meeting=[58,20], ceo=[22,20];
+  function clampOfficePoint([x,y]) {
+    return [Math.max(3,Math.min(97,x)),Math.max(8,Math.min(96,y))];
+  }
 
-    if(visualState==='meeting') return meeting;
-    if(visualState==='reporting'||visualState==='moving-report') return manager;
-    if(visualState==='ceo-report') return ceo;
-    return base;
+  function furnitureByType(type) {
+    return furniture.filter(item=>item.type===type);
+  }
+
+  function deskSeatPoints(item) {
+    const x=item.x,y=item.y,w=item.w,h=item.h;
+    if(item.type==='desk-1p') return [clampOfficePoint([x+w*.50,y+h*.88])];
+    if(item.type==='desk-2p') return [
+      clampOfficePoint([x+w*.31,y+h*.88]),
+      clampOfficePoint([x+w*.69,y+h*.88]),
+    ];
+    if(item.type==='workstation-4p') return [
+      clampOfficePoint([x+w*.27,y+h*.46]),
+      clampOfficePoint([x+w*.73,y+h*.46]),
+      clampOfficePoint([x+w*.27,y+h*.93]),
+      clampOfficePoint([x+w*.73,y+h*.93]),
+    ];
+    return [];
+  }
+
+  function allWorkSeats() {
+    const deskTypes=['desk-1p','desk-2p','workstation-4p'];
+    return furniture
+      .filter(item=>deskTypes.includes(item.type))
+      .sort((a,b)=>(a.y-b.y)||(a.x-b.x))
+      .flatMap(item=>deskSeatPoints(item).map((point,seatIndex)=>({point,furnitureId:item.id,seatIndex})));
+  }
+
+  function homeSeatForEmployee(employee,index) {
+    const employees=state.employees.slice(0,9);
+    const seats=allWorkSeats();
+    if(!seats.length) return [18+(index%3)*18,52+Math.floor(index/3)*18];
+    const employeeIndex=Math.max(0,employees.findIndex(e=>e.id===employee.id));
+    return seats[employeeIndex%seats.length].point;
+  }
+
+  function meetingSeatForEmployee(employee,index) {
+    const table=furnitureByType('meeting-table')[0];
+    if(!table) return [58,20];
+    const x=table.x,y=table.y,w=table.w,h=table.h;
+    const points=[
+      [x+w*.22,y+h*.92],[x+w*.50,y+h*.92],[x+w*.78,y+h*.92],
+      [x+w*.20,y+h*.18],[x+w*.50,y+h*.18],[x+w*.80,y+h*.18],
+    ].map(clampOfficePoint);
+    return points[index%points.length];
+  }
+
+  function ceoReportPoint() {
+    const desk=furnitureByType('ceo-desk')[0];
+    return desk ? clampOfficePoint([desk.x+desk.w*.50,desk.y+desk.h*.95]) : [22,20];
+  }
+
+  function managerReportPoint() {
+    const leaderIndex=state.employees.findIndex(e=>employeeRoleType(e)==='leader');
+    if(leaderIndex>=0){
+      const leader=state.employees[leaderIndex];
+      const [x,y]=homeSeatForEmployee(leader,leaderIndex);
+      return clampOfficePoint([x+4,y+1]);
+    }
+    const seats=allWorkSeats();
+    return seats.length ? clampOfficePoint([seats[seats.length-1].point[0]+4,seats[seats.length-1].point[1]]) : [73,69];
+  }
+
+  function employeePosition(employee,index,visualState) {
+    const home=homeSeatForEmployee(employee,index);
+    if(visualState==='meeting') return meetingSeatForEmployee(employee,index);
+    if(visualState==='reporting'||visualState==='moving-report') return managerReportPoint();
+    if(visualState==='ceo-report') return ceoReportPoint();
+    return home;
   }
 
   function renderCompanyOffice() {
@@ -646,7 +708,7 @@
     updateSelectedEmployeeStyles();
   });
   const version = document.querySelector('.sidebar-foot small');
-  if (version) version.textContent = 'v1.1.1 · Toolbar Layer Fix';
+  if (version) version.textContent = 'v1.2.0 · Furniture Linked Staff';
 
   try {
     renderOffice = renderCompanyOffice;

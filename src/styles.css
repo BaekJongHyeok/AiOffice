@@ -565,3 +565,12 @@ body{overflow:hidden}.app-shell{height:100vh;min-height:0;overflow:hidden}main{h
 .layout-editing .layout-editor-bar{z-index:200!important}
 .layout-editing .layout-tools{z-index:201!important}
 .layout-editing .office-item.dragging{z-index:99!important}
+
+/* v1.2 furniture-linked employee destinations */
+.game-office .sim-employees{z-index:6}
+.game-office .sim-employee{
+  transition:left 1.15s cubic-bezier(.22,.72,.24,1),top 1.15s cubic-bezier(.22,.72,.24,1),transform .22s ease!important;
+}
+.game-office .sim-employee.sim-working .employee-character{transform:translateX(-50%) translateY(2px)}
+.game-office .sim-employee.sim-meeting,.game-office .sim-employee.sim-reporting,.game-office .sim-employee.sim-ceo-report{z-index:12}
+.layout-editing .sim-employee{transition:left .35s ease,top .35s ease,opacity .2s ease!important}
