@@ -40,7 +40,7 @@
     renderAll();
     ensureControls();
 
-    const result = await window.aiOffice.automateSubscription(task.provider, task.prompt || '');
+    const result = await window.aiOffice.automateSubscription(task.provider, task.prompt || '', task.modelProfile || 'auto');
     if (!state.tasks.some(t => t.id === id)) return;
     if (result?.ok && result.result) {
       task.status = 'done';
