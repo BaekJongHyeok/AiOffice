@@ -900,3 +900,16 @@ body{overflow:hidden}.app-shell{height:100vh;min-height:0;overflow:hidden}main{h
 .game-office .ceo-nameplate small{font-size:7px;color:#ffd36b;font-weight:900}
 
 .ceo-profile-modal-card{width:min(520px,90vw)}
+
+/* v1.5.2 CEO desk seat / occlusion */
+.game-office .ceo-character-entity.ceo-at-desk{
+  transform:translate(-50%,-62%)!important;
+  z-index:1400!important;
+}
+.game-office .ceo-depth-desk .furniture-front-image{
+  clip-path:inset(46% 0 0 0)!important;
+  z-index:2200!important;
+}
+.layout-editing .ceo-depth-desk .furniture-front-image{
+  z-index:2!important;
+}
