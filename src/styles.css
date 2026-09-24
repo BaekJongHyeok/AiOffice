@@ -1057,3 +1057,21 @@ body{overflow:hidden}.app-shell{height:100vh;min-height:0;overflow:hidden}main{h
 .game-office .ceo-employee .employee-status-bubble{
   top:30px!important;
 }
+
+/* v1.5.9 CEO gap + dialog stacking */
+.game-office .ceo-employee .employee-status-bubble{
+  top:40px!important;
+}
+.game-office .employee-dialog-host{
+  z-index:20000!important;
+  pointer-events:none!important;
+}
+.game-office .employee-dialog-host .employee-popover{
+  z-index:20001!important;
+  pointer-events:auto!important;
+  position:absolute!important;
+}
+.game-office .employee-dialog-host,
+.game-office .employee-dialog-host *{
+  isolation:auto;
+}
