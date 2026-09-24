@@ -245,13 +245,13 @@ async function runTasks(){
   persist();renderAll();switchView('tasks');
 }
 
-async function openProvider(provider, prompt=''){
+async function openProvider(provider, prompt='', modelProfile='auto'){
   if(provider==='demo') return;
-  const r=await window.aiOffice.openSubscription(provider,prompt); if(!r.ok) alert(r.error||'AI 창을 열지 못했습니다.');
+  const r=await window.aiOffice.openSubscription(provider,prompt,modelProfile); if(!r.ok) alert(r.error||'AI 창을 열지 못했습니다.');
 }
 async function openTaskInProvider(id){
   const t=state.tasks.find(x=>x.id===id); if(!t) return;
-  await openProvider(t.provider,t.prompt||'');
+  await openProvider(t.provider,t.prompt||'',t.modelProfile||'auto');
   t.status='opened';t.openedAt=Date.now();persist();renderAll();
 }
 async function copyTaskPrompt(id){
