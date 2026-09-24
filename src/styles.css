@@ -4,3 +4,22 @@
 
 
 .update-btn { width: 100%; margin-bottom: 12px; font-size: 12px; }
+
+.project-cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(330px,1fr));gap:14px}
+.project-card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:18px}
+.project-head{display:flex;justify-content:space-between;gap:16px}
+.project-head h3{margin:0 0 6px;font-size:16px}
+.project-head p{margin:0;color:var(--muted);font-size:12px;line-height:1.5}
+.project-status{font-size:11px;white-space:nowrap;color:#cfd7e8}
+.project-meta{margin-top:14px;color:var(--muted);font-size:11px}
+.project-progress{height:7px;background:#202a3b;border-radius:999px;overflow:hidden;margin:10px 0 14px}
+.project-progress span{display:block;height:100%;background:var(--accent)}
+.project-task-list{display:grid;gap:7px;font-size:11px;color:#cfd7e8}
+.project-task-list>div{padding:8px 9px;background:#101621;border:1px solid #232d40;border-radius:7px}
+.project-task-list .manager-task{border-color:#7c8cff55;background:#7c8cff0d}
+.project-member-list{display:grid;gap:7px;margin-top:7px;max-height:220px;overflow:auto}
+.project-member{display:flex;align-items:center;gap:9px;background:#0f1520;border:1px solid var(--line);padding:8px;border-radius:7px;color:#dbe3f5!important}
+.project-member small{margin-left:auto;color:var(--muted)}
+.task-management-actions{display:flex;gap:8px}
+.task-error{margin-top:8px;padding:8px;border-radius:7px;background:#ff6b7d12;border:1px solid #ff6b7d35;color:#ff9cab;font-size:10px;line-height:1.45}
+.task-delete-btn{color:#ff8f9d!important}

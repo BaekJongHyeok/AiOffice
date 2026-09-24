@@ -41,6 +41,7 @@
     ensureControls();
 
     const result = await window.aiOffice.automateSubscription(task.provider, task.prompt || '');
+    if (!state.tasks.some(t => t.id === id)) return;
     if (result?.ok && result.result) {
       task.status = 'done';
       task.finishedAt = Date.now();
@@ -52,6 +53,8 @@
         department: task.department,
         provider: task.provider,
         task: task.task,
+        taskId: task.id,
+        projectId: task.projectId || null,
         result: result.result,
         createdAt: Date.now(),
         automated: true,
@@ -76,6 +79,11 @@
     };
     queues[provider] = (queues[provider] || Promise.resolve()).then(run, run);
   }
+
+  window.addEventListener('ai-office-enqueue-task', (event) => {
+    const id = event?.detail?.id;
+    if (id) enqueue(id);
+  });
 
   document.querySelector('#runTaskBtn')?.addEventListener('click', () => {
     setTimeout(() => {
