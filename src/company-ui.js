@@ -124,58 +124,100 @@
 
   function buildCompanyShell() {
     officeView.innerHTML = `
-      <div class="company-toolbar card">
+      <div class="company-toolbar card game-toolbar">
         <div>
           <div class="company-kicker">🏢 MY AI COMPANY</div>
           <h2>AI 직원들과 함께 일하는 회사</h2>
-          <p>직원을 클릭하면 현재 업무와 상세 정보를 확인하고 바로 관리할 수 있습니다.</p>
+          <p>직원들이 실제 사무실에서 움직이고, 회의하고, 보고하는 모습을 확인하세요.</p>
         </div>
         <div id="companyStats" class="company-stats"></div>
       </div>
 
-      <div class="company-layout">
-        <section class="sim-office card">
-          <div class="office-wall-title">AI OFFICE <span>LIVE FLOOR</span></div>
-          <div class="sim-room meeting-room">
-            <div class="sim-room-label">👥 회의실</div>
-            <div class="meeting-table"><span></span></div>
+      <div class="company-layout game-company-layout">
+        <section class="sim-office card game-office">
+          <div class="office-skyline"></div>
+          <div class="office-floor-grid"></div>
+
+          <div class="game-room ceo-suite">
+            <div class="game-room-title">CEO실</div>
+            <div class="executive-desk"></div>
+            <div class="office-sofa sofa-a"></div>
+            <div class="office-sofa sofa-b"></div>
+            <div class="plant plant-a">🪴</div>
+            <div class="bookshelf shelf-a"></div>
           </div>
-          <div class="sim-room manager-room">
-            <div class="sim-room-label">🧑‍💼 팀장석</div>
-            <div class="pixel-desk compact"></div>
+
+          <div class="game-room meeting-suite">
+            <div class="game-room-title">회의실</div>
+            <div class="conference-table"></div>
+            <div class="meeting-screen"><span></span></div>
+            <div class="plant meeting-plant">🌿</div>
           </div>
-          <div class="sim-room ceo-room">
-            <div class="sim-room-label">👑 CEO</div>
-            <div class="pixel-desk executive"></div>
+
+          <div class="game-room server-suite">
+            <div class="game-room-title">서버실</div>
+            <div class="server-rack rack-a"></div>
+            <div class="server-rack rack-b"></div>
           </div>
-          <div class="office-decoration deco-1">🪴</div>
-          <div class="office-decoration deco-2">📚</div>
-          <div class="office-decoration deco-3">☕</div>
+
+          <div class="game-zone zone-planning"><span>기획팀</span><div class="zone-furniture"></div></div>
+          <div class="game-zone zone-marketing"><span>마케팅팀</span><div class="zone-furniture"></div></div>
+          <div class="game-zone zone-development"><span>개발팀</span><div class="zone-furniture"></div></div>
+          <div class="game-zone zone-design"><span>디자인팀</span><div class="zone-furniture"></div></div>
+          <div class="game-zone zone-analysis"><span>분석 / QA</span><div class="zone-furniture"></div></div>
+
+          <div class="game-room lounge-suite">
+            <div class="game-room-title">휴게실</div>
+            <div class="lounge-table"></div>
+            <div class="lounge-sofa"></div>
+            <div class="water-cooler"></div>
+          </div>
+
+          <div class="hallway-decor hplant-1">🪴</div>
+          <div class="hallway-decor hplant-2">🌿</div>
+          <div class="hallway-decor coffee-machine">☕</div>
+          <div class="hallway-decor office-cat">🐈</div>
+
           <div id="simEmployees" class="sim-employees"></div>
           <div id="employeeDialogHost" class="employee-dialog-host"></div>
-          <div id="officeActivity" class="office-activity"></div>
+          <div id="officeActivity" class="office-activity game-activity"></div>
         </section>
 
-        <aside class="ceo-directive-panel card">
+        <aside class="ceo-directive-panel card game-command-panel">
           <div class="ceo-directive-header">
-            <div class="ceo-crown">👑</div>
+            <div class="ceo-crown">⚡</div>
             <div>
-              <div class="company-kicker">CEO COMMAND</div>
+              <div class="company-kicker">CEO QUICK COMMAND</div>
               <h2>빠른 업무 지시</h2>
-              <p>회사 화면을 보면서 직원에게 바로 업무를 배정합니다.</p>
+              <p>오피스를 보면서 필요한 직원에게 즉시 업무를 배정하세요.</p>
             </div>
           </div>
+
+          <div class="command-step">
+            <span class="command-step-no">1</span>
+            <div><b>업무 내용</b><small>해야 할 일을 구체적으로 입력하세요.</small></div>
+          </div>
           <textarea id="taskInput" placeholder="예: 신규 고객 유치를 위한 실행 가능한 마케팅 전략을 만들어줘."></textarea>
-          <div class="ceo-directive-label">업무를 맡길 직원</div>
+
+          <div class="command-step">
+            <span class="command-step-no">2</span>
+            <div><b>담당 직원 선택</b><small>업무를 맡길 AI 직원을 선택하세요.</small></div>
+          </div>
           <div id="assigneeList" class="assignee-list ceo-assignees"></div>
+
           <div class="ceo-directive-options">
             <label class="quick-auto"><input id="autoRunToggle" type="checkbox" checked> 배정 즉시 자동 실행</label>
           </div>
+
           <div class="ceo-directive-actions">
             <button id="selectAllBtnCompany" class="btn ghost">전체 선택</button>
-            <button id="runTaskBtnCompany" class="btn primary">▶ 업무 배정</button>
+            <button id="runTaskBtnCompany" class="btn primary">✈ 업무 지시하기</button>
           </div>
-          <div class="ceo-directive-hint">직원이 업무를 받으면 오피스에서 상태와 위치가 자동으로 바뀝니다.</div>
+
+          <div class="recent-command-box">
+            <div class="recent-command-head"><b>최근 지시한 업무</b><span>LIVE</span></div>
+            <div id="recentCommandList" class="recent-command-list"></div>
+          </div>
         </aside>
       </div>
     `;
@@ -194,20 +236,22 @@
     };
   }
 
+
   function employeePosition(index, visualState) {
     const deskPositions = [
-      [13,28],[34,28],[55,28],
-      [13,59],[34,59],[55,59],
-      [23,76],[48,76],[66,60]
+      [17,47],[36,47],[55,47],
+      [17,68],[36,68],[55,68],
+      [24,83],[46,83],[67,78]
     ];
     const base = deskPositions[index % deskPositions.length];
-    const manager = [76,58], meeting=[77,24], ceo=[88,25];
+    const manager = [69,63], meeting=[72,20], ceo=[24,19];
 
     if (visualState === 'meeting') return meeting;
     if (visualState === 'reporting' || visualState === 'moving-report') return manager;
     if (visualState === 'ceo-report') return ceo;
     return base;
   }
+
 
   function renderCompanyOffice() {
     if (!document.querySelector('#simEmployees')) buildCompanyShell();
@@ -297,6 +341,7 @@
     renderEmployeeDialog();
     renderStats();
     renderActivity();
+    renderRecentCommands();
   }
 
   function renderStats() {
@@ -316,6 +361,20 @@
       <div><strong>${stats.meeting}</strong><span>회의 중</span></div>
       <div><strong>${stats.moving}</strong><span>이동 중</span></div>
       <div><strong>${stats.reporting}</strong><span>보고 중</span></div>`;
+  }
+
+  function renderRecentCommands() {
+    const wrap=document.querySelector('#recentCommandList');
+    if(!wrap) return;
+    const rows=state.tasks.slice(0,5);
+    wrap.innerHTML=rows.length ? rows.map(t=>{
+      const status=t.status==='done'?'완료':t.status==='working'?'진행 중':t.status==='opened'?'확인 필요':'대기';
+      const cls=t.status==='done'?'done':t.status==='working'?'working':t.status==='opened'?'warn':'queued';
+      return `<div class="recent-command-item">
+        <span class="recent-command-dot ${cls}"></span>
+        <div><b>${escapeHtml(t.task.slice(0,34))}</b><small>${escapeHtml(t.employeeName)} · ${status}</small></div>
+      </div>`;
+    }).join('') : '<div class="recent-command-empty">아직 지시한 업무가 없습니다.</div>';
   }
 
   function renderActivity() {
@@ -497,7 +556,7 @@
     updateSelectedEmployeeStyles();
   });
   const version = document.querySelector('.sidebar-foot small');
-  if (version) version.textContent = 'v0.5.4 · RPG Pixel Staff';
+  if (version) version.textContent = 'v0.6.0 · Office Art Overhaul';
 
   try {
     renderOffice = renderCompanyOffice;
