@@ -124,7 +124,36 @@
 
         <aside id="employeeInspector" class="employee-inspector card"></aside>
       </div>
+
+      <section class="quick-directive card">
+        <div class="quick-directive-head">
+          <div><h3>👑 CEO 빠른 업무 지시</h3><p>회사 화면을 떠나지 않고 직원에게 바로 업무를 배정합니다.</p></div>
+          <label class="quick-auto"><input id="autoRunToggle" type="checkbox" checked> 자동 실행</label>
+        </div>
+        <textarea id="taskInput" placeholder="예: 신규 고객 유치를 위한 실행 가능한 마케팅 전략을 만들어줘."></textarea>
+        <div class="quick-directive-bottom">
+          <div id="assigneeList" class="assignee-list quick-assignees"></div>
+          <div class="quick-directive-actions">
+            <button id="selectAllBtnCompany" class="btn ghost">전체 선택</button>
+            <button id="runTaskBtnCompany" class="btn primary">▶ 업무 배정</button>
+          </div>
+        </div>
+      </section>
     `;
+
+    const selectAll = document.querySelector('#selectAllBtnCompany');
+    const run = document.querySelector('#runTaskBtnCompany');
+    if (selectAll) selectAll.onclick = () => document.querySelectorAll('#assigneeList input').forEach(x => x.checked = true);
+    if (run) run.onclick = async () => {
+      const before = new Set(state.tasks.map(t => t.id));
+      await runTasks();
+      const created = state.tasks.filter(t => !before.has(t.id) && t.status === 'queued');
+      if (document.querySelector('#autoRunToggle')?.checked) {
+        created.forEach(t => window.dispatchEvent(new CustomEvent('ai-office-enqueue-task', { detail:{ id:t.id } })));
+      }
+      setTimeout(() => switchView('office'), 20);
+    };
+  }
   }
 
   function employeePosition(index, visualState) {
@@ -177,6 +206,10 @@
       };
     });
 
+    const assignees=document.querySelector('#assigneeList');
+    if(assignees){
+      assignees.innerHTML=state.employees.map(e=>`<label class="assignee"><input type="checkbox" value="${e.id}"><span>${e.avatar||'🧑‍💼'} ${escapeHtml(e.name)} · ${escapeHtml(e.role)}</span><span class="provider">${providerLabel[e.provider]||e.provider}</span></label>`).join('');
+    }
     renderInspector();
     renderStats();
     renderActivity();
@@ -278,6 +311,8 @@
   }
 
   buildCompanyShell();
+  const version = document.querySelector('.sidebar-foot small');
+  if (version) version.textContent = 'v0.5.0 · Company Simulation';
 
   try {
     renderOffice = renderCompanyOffice;
