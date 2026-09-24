@@ -137,7 +137,7 @@
       <div class="company-layout game-company-layout">
         <section class="sim-office card game-office">
           <div class="editable-office-floor"></div>
-          <div id="officeFurniture" class="office-furniture"></div>
+          <div id="officeFurniture" class="office-furniture furniture-base-layer"></div>
           <div class="layout-editor-bar">
             <button id="layoutEditBtn" class="layout-edit-btn">✥ 배치 편집</button>
             <div id="layoutTools" class="layout-tools">
@@ -150,6 +150,7 @@
           </div>
 
           <div id="simEmployees" class="sim-employees"></div>
+          <div id="officeFurnitureFront" class="office-furniture-front"></div>
           <div id="employeeDialogHost" class="employee-dialog-host"></div>
           <div id="officeActivity" class="office-activity game-activity"></div>
         </section>
@@ -260,14 +261,44 @@
 
 
   function renderFurniture(){
-    const host=document.querySelector('#officeFurniture'); if(!host)return;
+    const host=document.querySelector('#officeFurniture');
+    const frontHost=document.querySelector('#officeFurnitureFront');
+    if(!host)return;
+
+    const splitTypes=new Set(['desk-1p','desk-2p','workstation-4p']);
+
     host.innerHTML=furniture.map(item=>{
       const preset=furnitureCatalog[item.type]||item;
-      return `<button type="button" class="office-item pixel-furniture ${companyUI.selectedFurnitureId===item.id?'selected':''}" data-id="${item.id}" aria-label="${preset.label||item.type}" style="left:${item.x}%;top:${item.y}%;width:${item.w}%;height:${item.h}%">
-        <img class="furniture-sprite real-furniture-image" src="assets/furniture/${item.type}.png" alt="" draggable="false">
+      const src=splitTypes.has(item.type)
+        ? `assets/furniture/${item.type}-base.png`
+        : `assets/furniture/${item.type}.png`;
+      const depth=Math.round((item.y+item.h)*10);
+      return `<button type="button" class="office-item pixel-furniture ${companyUI.selectedFurnitureId===item.id?'selected':''}" data-id="${item.id}" aria-label="${preset.label||item.type}" style="left:${item.x}%;top:${item.y}%;width:${item.w}%;height:${item.h}%;--depth:${depth}">
+        <img class="furniture-sprite real-furniture-image" src="${src}" alt="" draggable="false">
         <em>${preset.label||item.label||item.type}</em>
       </button>`;
     }).join('');
+
+    if(frontHost){
+      frontHost.innerHTML=furniture
+        .filter(item=>splitTypes.has(item.type))
+        .map(item=>{
+          const depth=Math.round((item.y+item.h)*10);
+          return `<div class="furniture-front-piece" data-furniture-id="${item.id}" style="left:${item.x}%;top:${item.y}%;width:${item.w}%;height:${item.h}%;--depth:${depth}">
+            <img src="assets/furniture/${item.type}-front.png" alt="" draggable="false">
+          </div>`;
+        }).join('');
+    }
+
+    const syncFrontPiece=(item)=>{
+      if(!frontHost)return;
+      const front=frontHost.querySelector(`[data-furniture-id="${item.id}"]`);
+      if(!front)return;
+      front.style.left=item.x+'%';
+      front.style.top=item.y+'%';
+      front.style.width=item.w+'%';
+      front.style.height=item.h+'%';
+    };
 
     const updateLabel=()=>{
       const label=document.querySelector('#selectedFurnitureLabel');
@@ -306,6 +337,7 @@
           item.x=Math.max(0,Math.min(100-item.w,originX+dx));
           item.y=Math.max(0,Math.min(100-item.h,originY+dy));
           el.style.left=item.x+'%'; el.style.top=item.y+'%';
+          syncFrontPiece(item);
         };
         const up=(e)=>{
           if(e.pointerId!==pointerId)return;
@@ -349,17 +381,17 @@
     const x=item.x,y=item.y,w=item.w,h=item.h;
     const spot=(rx,ry,facing='up')=>({point:clampOfficePoint([x+w*rx,y+h*ry]),facing});
     if(item.type==='desk-1p') return [
-      spot(.50,1.04,'up'),
+      spot(.50,.80,'up'),
     ];
     if(item.type==='desk-2p') return [
-      spot(.28,1.04,'up'),
-      spot(.72,1.04,'up'),
+      spot(.30,.80,'up'),
+      spot(.70,.80,'up'),
     ];
     if(item.type==='workstation-4p') return [
-      spot(.24,1.02,'up'),
-      spot(.43,1.02,'up'),
-      spot(.62,1.02,'up'),
-      spot(.81,1.02,'up'),
+      spot(.28,.43,'down'),
+      spot(.72,.43,'down'),
+      spot(.28,.82,'up'),
+      spot(.72,.82,'up'),
     ];
     return [];
   }
@@ -477,6 +509,7 @@
       el.dataset.facing = placement.facing || 'up';
       el.style.setProperty('--x', `${pos[0]}%`);
       el.style.setProperty('--y', `${pos[1]}%`);
+      el.style.setProperty('--employee-depth', String(1000 + Math.round(pos[1]*10)));
 
       const dot = el.querySelector('.status-dot-mini');
       dot.className = `status-dot-mini ${vstate}`;
@@ -718,7 +751,7 @@
     updateSelectedEmployeeStyles();
   });
   const version = document.querySelector('.sidebar-foot small');
-  if (version) version.textContent = 'v1.2.3 · Desk Position Fix';
+  if (version) version.textContent = 'v1.3.0 · Depth Layering';
 
   try {
     renderOffice = renderCompanyOffice;
