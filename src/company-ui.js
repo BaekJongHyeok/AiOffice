@@ -387,7 +387,7 @@
     if(!anchor) return;
 
     const task=activeTask(e.id);
-    const reports=state.reports.filter(r=>r.employeeId===e.id).slice(0,6);
+    const reports=state.reports.filter(r=>r.employeeId===e.id).slice(0,3);
     const openReport=reports.find(r=>r.id===companyUI.openReportId) || null;
     const vstate=employeeVisualState(e);
     const meta=statusMeta[vstate]||statusMeta.idle;
@@ -400,8 +400,8 @@
     const anchorCenterX=anchorRect.left-officeRect.left+(anchorRect.width/2);
     const anchorCenterY=anchorRect.top-officeRect.top+(anchorRect.height/2);
     const placeLeft=anchorCenterX > officeRect.width*0.62;
-    const top=Math.max(12,Math.min(officeRect.height-430,anchorCenterY-165));
-    const left=placeLeft ? Math.max(12,anchorCenterX-390) : Math.min(officeRect.width-372,anchorCenterX+82);
+    const top=Math.max(14,Math.min(officeRect.height-510,anchorCenterY-210));
+    const left=placeLeft ? Math.max(14,anchorCenterX-430) : Math.min(officeRect.width-404,anchorCenterX+70);
 
     const signature = [
       e.id,e.name,e.rank,e.department,e.provider,e.role,e.traits,e.spriteStyle,
@@ -446,9 +446,9 @@
         <div class="popover-profile">
           <div class="popover-avatar">${pixelAvatar(e,vstate,true)}</div>
           <div class="popover-profile-copy">
-            <div class="inspector-name-line"><h2>${escapeHtml(e.name)}</h2><span>${escapeHtml(e.rank||'사원')}</span></div>
-            <p>${escapeHtml(e.department||'미지정')} · ${providerIcon[e.provider]||''} ${providerLabel[e.provider]||e.provider}</p>
-            <div class="status-chip ${vstate}"><i></i>${escapeHtml(meta[0])} · ${escapeHtml(meta[1])}</div>
+            <div class="inspector-name-line"><h2>${escapeHtml(e.name)}</h2></div>
+            <div class="status-chip ${vstate}"><i></i>${escapeHtml(meta[0])}</div>
+            <p>${escapeHtml(e.department||'미지정')} <span class="profile-divider">|</span> ${escapeHtml(e.rank||'사원')} <span class="profile-divider">|</span> ${escapeHtml(e.role||'일반 업무')}</p>
           </div>
         </div>
 
@@ -464,14 +464,6 @@
             </div>` : '<div class="no-current-task">현재 진행 중인 업무가 없습니다.</div>'}
         </div>
 
-        <div class="popover-section compact-info">
-          <dl class="employee-info-grid">
-            <dt>역할</dt><dd>${escapeHtml(e.role||'일반 업무')}</dd>
-            <dt>업무 스타일</dt><dd>${escapeHtml(e.traits||'미설정')}</dd>
-            <dt>연결 AI</dt><dd>${providerIcon[e.provider]||''} ${providerLabel[e.provider]||e.provider}</dd>
-          </dl>
-        </div>
-
         <div class="popover-section">
           <div class="section-title"><h3>최근 보고</h3><span class="report-count">${reports.length}건</span></div>
           ${reportList}
@@ -479,9 +471,9 @@
         </div>
 
         <div class="popover-actions">
-          <button class="btn ghost inspector-edit">✏ 정보 수정</button>
-          <button class="btn ghost inspector-task" ${task?'':'disabled'}>📋 업무 상세</button>
-          <button class="btn primary inspector-employee">⚙ 직원 관리</button>
+          <button class="btn ghost inspector-edit">정보 수정</button>
+          <button class="btn primary inspector-task" ${task?'':'disabled'}>업무 상세</button>
+          <button class="btn ghost inspector-more" aria-label="더보기">•••</button>
         </div>
       </div>`;
 
@@ -511,7 +503,7 @@
     });
 
     host.querySelector('.inspector-edit')?.addEventListener('click',(event)=>{event.stopPropagation();openEmployeeModal(e.id)});
-    host.querySelector('.inspector-employee')?.addEventListener('click',(event)=>{event.stopPropagation();switchView('employees')});
+    host.querySelector('.inspector-more')?.addEventListener('click',(event)=>{event.stopPropagation();switchView('employees')});
     host.querySelector('.inspector-task')?.addEventListener('click',(event)=>{
       event.stopPropagation();
       switchView('tasks');
@@ -535,7 +527,7 @@
     updateSelectedEmployeeStyles();
   });
   const version = document.querySelector('.sidebar-foot small');
-  if (version) version.textContent = 'v0.7.0 · Asset Pixel Office';
+  if (version) version.textContent = 'v0.7.2 · Employee Detail UI';
 
   try {
     renderOffice = renderCompanyOffice;
