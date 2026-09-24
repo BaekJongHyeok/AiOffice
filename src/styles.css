@@ -1075,3 +1075,26 @@ body{overflow:hidden}.app-shell{height:100vh;min-height:0;overflow:hidden}main{h
 .game-office .employee-dialog-host *{
   isolation:auto;
 }
+
+/* v1.6.0 CEO hitbox + nameplate alignment */
+.game-office .ceo-employee{
+  width:112px!important;
+  height:132px!important;
+  transform:translate(-50%,-64%)!important;
+}
+.game-office .ceo-employee .employee-character{
+  top:18px!important;
+  left:50%!important;
+  width:112px!important;
+  height:112px!important;
+  transform:translateX(-50%)!important;
+}
+.game-office .ceo-employee .employee-status-bubble{
+  top:4px!important;
+  left:50%!important;
+  transform:translate(-50%,-100%)!important;
+  margin:0!important;
+}
+.game-office .ceo-employee .employee-task-caption{
+  display:none!important;
+}
