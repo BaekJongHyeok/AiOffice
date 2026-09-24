@@ -24,29 +24,56 @@
 
   function pixelAvatar(employee, status='idle', large=false) {
     const p = rolePalette(employee);
-    const hair = employee.id ? ['#332016','#171922','#4a2a25','#1d2734'][Math.abs(hashCode(employee.id)) % 4] : '#302018';
     const styleKey = employee.spriteStyle || 'auto';
     const combined = `${employee.department} ${employee.role}`.toLowerCase();
-    const glasses = ['development','analysis','qa'].includes(styleKey) || (styleKey === 'auto' && /개발|분석|qa|검수/.test(combined));
-    const accessory = styleKey === 'marketing' || (styleKey === 'auto' && /마케팅/.test(combined)) ? '🎧' : styleKey === 'design' || (styleKey === 'auto' && /디자인/.test(combined)) ? '✏️' : '';
-    const cls = large ? 'pixel-avatar large' : 'pixel-avatar';
+    const resolvedStyle =
+      styleKey !== 'auto' ? styleKey :
+      /마케팅|콘텐츠/.test(combined) ? 'marketing' :
+      /개발|엔지니어|코드/.test(combined) ? 'development' :
+      /디자인/.test(combined) ? 'design' :
+      /분석|데이터|리서치/.test(combined) ? 'analysis' :
+      /qa|검수|품질/.test(combined) ? 'qa' :
+      /팀장|대표|ceo/.test(`${employee.rank} ${employee.role}`.toLowerCase()) ? 'leader' :
+      'planning';
+
+    const hair = employee.id ? ['#5a3427','#242531','#6a3d2f','#233044','#2e291f'][Math.abs(hashCode(employee.id)) % 5] : '#38251c';
+    const skin = ['#f4c4a3','#edb892','#f0c09f'][Math.abs(hashCode(employee.id+'skin')) % 3];
+    const glasses = ['development','analysis','qa'].includes(resolvedStyle);
+    const cls = large ? 'rpg-pixel-avatar large' : 'rpg-pixel-avatar';
+
     return `
-      <div class="${cls} state-${status}" style="--role:${p.main};--role-dark:${p.dark};--hair:${hair};--accent:${p.accent}">
-        <div class="px-shadow"></div>
-        <div class="px-body">
-          <span class="px-leg l"></span><span class="px-leg r"></span>
-          <span class="px-torso"></span>
-          <span class="px-arm l"></span><span class="px-arm r"></span>
-          <span class="px-neck"></span>
-          <span class="px-head"></span>
-          <span class="px-hair top"></span><span class="px-hair side"></span>
-          <span class="px-eye l"></span><span class="px-eye r"></span>
-          ${glasses ? '<span class="px-glasses"></span>' : ''}
-          <span class="px-device"></span>
-          ${accessory ? `<span class="px-accessory">${accessory}</span>` : ''}
-        </div>
+      <div class="${cls} role-${resolvedStyle} state-${status}" style="--role:${p.main};--role-dark:${p.dark};--hair:${hair};--skin:${skin};--accent:${p.accent}">
+        <span class="rpg-shadow"></span>
+        <span class="rpg-leg left"></span>
+        <span class="rpg-leg right"></span>
+        <span class="rpg-shoe left"></span>
+        <span class="rpg-shoe right"></span>
+        <span class="rpg-body"></span>
+        <span class="rpg-shirt"></span>
+        <span class="rpg-tie"></span>
+        <span class="rpg-arm left"></span>
+        <span class="rpg-arm right"></span>
+        <span class="rpg-hand left"></span>
+        <span class="rpg-hand right"></span>
+        <span class="rpg-neck"></span>
+        <span class="rpg-head"></span>
+        <span class="rpg-ear left"></span>
+        <span class="rpg-ear right"></span>
+        <span class="rpg-hair back"></span>
+        <span class="rpg-hair top"></span>
+        <span class="rpg-hair fringe"></span>
+        <span class="rpg-eye left"></span>
+        <span class="rpg-eye right"></span>
+        <span class="rpg-brow left"></span>
+        <span class="rpg-brow right"></span>
+        <span class="rpg-mouth"></span>
+        ${glasses ? '<span class="rpg-glasses"></span>' : ''}
+        <span class="rpg-id-badge"></span>
+        <span class="rpg-role-item"></span>
+        <span class="rpg-role-item-detail"></span>
       </div>`;
   }
+
 
   function hashCode(str='') {
     let h=0; for(let i=0;i<str.length;i++) h=((h<<5)-h)+str.charCodeAt(i)|0; return h;
@@ -470,7 +497,7 @@
     updateSelectedEmployeeStyles();
   });
   const version = document.querySelector('.sidebar-foot small');
-  if (version) version.textContent = 'v0.5.3 · Stable Dialog';
+  if (version) version.textContent = 'v0.5.4 · RPG Pixel Staff';
 
   try {
     renderOffice = renderCompanyOffice;
