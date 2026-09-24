@@ -189,8 +189,12 @@ ipcMain.handle('run-updater', async () => {
     writeLog((pull.stdout || pull.stderr || 'git pull complete').trim());
 
     writeLog('Running npm install');
-    const npm = process.platform === 'win32' ? 'npm.cmd' : 'npm';
-    const install = await execFileAsync(npm, ['install', '--no-fund', '--no-audit'], { cwd:projectRoot });
+    let install;
+    if (process.platform === 'win32') {
+      install = await execFileAsync('cmd.exe', ['/d', '/s', '/c', 'npm.cmd install --no-fund --no-audit'], { cwd:projectRoot });
+    } else {
+      install = await execFileAsync('npm', ['install', '--no-fund', '--no-audit'], { cwd:projectRoot });
+    }
     writeLog((install.stdout || install.stderr || 'npm install complete').trim());
 
     writeLog('Relaunching app');
