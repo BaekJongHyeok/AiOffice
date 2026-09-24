@@ -12,32 +12,35 @@
   };
 
   const furnitureCatalog = {
-    'ceo-desk':{label:'CEO 책상',w:26,h:23},
-    'workstation-4p':{label:'4인 워크스테이션',w:24,h:22},
-    'desk-2p':{label:'2인 책상',w:22,h:20},
-    'meeting-table':{label:'회의 테이블',w:25,h:20},
-    'cafe-table':{label:'카페 테이블',w:18,h:18},
-    'bookshelf':{label:'책장',w:16,h:22},
-    'server-rack':{label:'서버 랙',w:14,h:24},
-    'office-corner':{label:'정수기/서류함',w:14,h:20},
-    'plant-set':{label:'화분 세트',w:12,h:18},
+    'ceo-desk':{label:'CEO 책상',col:0,row:0,w:27,h:22},
+    'desk-1p':{label:'1인 책상',col:1,row:0,w:17,h:17},
+    'desk-2p':{label:'2인 책상',col:2,row:0,w:24,h:18},
+    'workstation-4p':{label:'4인 워크스테이션',col:0,row:1,w:25,h:21},
+    'meeting-table':{label:'회의 테이블',col:1,row:1,w:24,h:18},
+    'bookshelf':{label:'책장',col:2,row:1,w:16,h:22},
+    'server-rack':{label:'서버 랙',col:0,row:2,w:15,h:23},
+    'office-corner':{label:'정수기/서류함',col:1,row:2,w:14,h:20},
+    'plant-large':{label:'대형 화분',col:2,row:2,w:10,h:18},
   };
   const defaultFurniture = [
-    {id:'ceo',type:'ceo-desk',x:6,y:7,...furnitureCatalog['ceo-desk']},
-    {id:'meet',type:'meeting-table',x:43,y:6,...furnitureCatalog['meeting-table']},
-    {id:'server',type:'server-rack',x:83,y:7,...furnitureCatalog['server-rack']},
-    {id:'ws-a',type:'workstation-4p',x:8,y:42,...furnitureCatalog['workstation-4p']},
-    {id:'ws-b',type:'desk-2p',x:35,y:43,...furnitureCatalog['desk-2p']},
-    {id:'ws-c',type:'desk-2p',x:8,y:68,...furnitureCatalog['desk-2p']},
-    {id:'ws-d',type:'workstation-4p',x:35,y:68,...furnitureCatalog['workstation-4p']},
-    {id:'shelf',type:'bookshelf',x:68,y:40,...furnitureCatalog['bookshelf']},
-    {id:'corner',type:'office-corner',x:82,y:60,...furnitureCatalog['office-corner']},
-    {id:'lounge',type:'cafe-table',x:67,y:79,...furnitureCatalog['cafe-table']},
-    {id:'plant',type:'plant-set',x:58,y:50,...furnitureCatalog['plant-set']},
+    {id:'ceo',type:'ceo-desk',x:5,y:5,...furnitureCatalog['ceo-desk']},
+    {id:'meet',type:'meeting-table',x:41,y:7,...furnitureCatalog['meeting-table']},
+    {id:'server',type:'server-rack',x:82,y:6,...furnitureCatalog['server-rack']},
+    {id:'ws-a',type:'workstation-4p',x:8,y:39,...furnitureCatalog['workstation-4p']},
+    {id:'ws-b',type:'desk-2p',x:36,y:40,...furnitureCatalog['desk-2p']},
+    {id:'ws-c',type:'desk-1p',x:10,y:68,...furnitureCatalog['desk-1p']},
+    {id:'ws-d',type:'workstation-4p',x:37,y:66,...furnitureCatalog['workstation-4p']},
+    {id:'shelf',type:'bookshelf',x:69,y:39,...furnitureCatalog['bookshelf']},
+    {id:'corner',type:'office-corner',x:82,y:59,...furnitureCatalog['office-corner']},
+    {id:'plant-a',type:'plant-large',x:61,y:44,...furnitureCatalog['plant-large']},
+    {id:'plant-b',type:'plant-large',x:76,y:72,...furnitureCatalog['plant-large']},
   ];
-  const loadFurniture=()=>{try{return JSON.parse(localStorage.getItem('aiOfficeFurnitureV2'))||defaultFurniture.map(x=>({...x}))}catch{return defaultFurniture.map(x=>({...x}))}};
+  const loadFurniture=()=>{try{
+    const saved=JSON.parse(localStorage.getItem('aiOfficeFurnitureV3'));
+    return Array.isArray(saved)&&saved.every(x=>furnitureCatalog[x.type])?saved:defaultFurniture.map(x=>({...x}));
+  }catch{return defaultFurniture.map(x=>({...x}))}};
   let furniture=loadFurniture();
-  const saveFurniture=()=>localStorage.setItem('aiOfficeFurnitureV2',JSON.stringify(furniture));
+  const saveFurniture=()=>localStorage.setItem('aiOfficeFurnitureV3',JSON.stringify(furniture));
 
   const rolePalette = (employee) => {
     const style = employee.spriteStyle || 'auto';
@@ -131,7 +134,7 @@
           <div class="layout-editor-bar">
             <button id="layoutEditBtn" class="layout-edit-btn">✥ 배치 편집</button>
             <div id="layoutTools" class="layout-tools">
-              <button data-add="desk-2p">+ 2인 책상</button><button data-add="workstation-4p">+ 4인 책상</button><button data-add="meeting-table">+ 회의 테이블</button><button data-add="cafe-table">+ 카페 테이블</button><button data-add="bookshelf">+ 책장</button><button data-add="server-rack">+ 서버랙</button><button data-add="plant-set">+ 화분</button>
+              <button data-add="desk-1p">+ 1인 책상</button><button data-add="desk-2p">+ 2인 책상</button><button data-add="workstation-4p">+ 4인 책상</button><button data-add="meeting-table">+ 회의 테이블</button><button data-add="bookshelf">+ 책장</button><button data-add="server-rack">+ 서버랙</button><button data-add="office-corner">+ 정수기</button><button data-add="plant-large">+ 화분</button>
               <button id="layoutDeleteBtn">삭제</button><button id="layoutResetBtn">초기화</button><button id="layoutDoneBtn" class="primary">완료</button>
             </div>
           </div>
@@ -208,7 +211,7 @@
     host.innerHTML=furniture.map(item=>{
       const preset=furnitureCatalog[item.type]||item;
       return `<button class="office-item pixel-furniture ${companyUI.selectedFurnitureId===item.id?'selected':''}" data-id="${item.id}" style="left:${item.x}%;top:${item.y}%;width:${item.w}%;height:${item.h}%">
-        <img class="furniture-sprite" src="${window.AIOFFICE_FURNITURE_ASSETS?.[item.type]||''}" alt="${preset.label||item.type}" draggable="false">
+        <span class="furniture-sprite atlas-sprite" style="--atlas-x:${preset.col};--atlas-y:${preset.row};--atlas-url:url('${window.AIOFFICE_V10_ATLAS||''}')"></span>
         <em>${preset.label||item.label||item.type}</em>
       </button>`;
     }).join('');
@@ -555,7 +558,7 @@
     updateSelectedEmployeeStyles();
   });
   const version = document.querySelector('.sidebar-foot small');
-  if (version) version.textContent = 'v0.9.0 · Pixel Furniture';
+  if (version) version.textContent = 'v1.0.0 · Pixel Office Assets';
 
   try {
     renderOffice = renderCompanyOffice;
