@@ -41,6 +41,16 @@
   }catch{return defaultFurniture.map(x=>({...x}))}};
   let furniture=loadFurniture();
   const saveFurniture=()=>localStorage.setItem('aiOfficeFurnitureV3',JSON.stringify(furniture));
+
+  const loadSeatAssignments=()=>{
+    try{
+      const saved=JSON.parse(localStorage.getItem('aiOfficeSeatAssignmentsV1'));
+      return saved && typeof saved==='object' ? saved : {};
+    }catch{return {}}
+  };
+  let seatAssignments=loadSeatAssignments();
+  const saveSeatAssignments=()=>localStorage.setItem('aiOfficeSeatAssignmentsV1',JSON.stringify(seatAssignments));
+
   const refreshEmployeeDestinations=()=>{
     if(document.querySelector('#simEmployees')) {
       renderCompanyOffice();
@@ -224,14 +234,14 @@
       ev.stopPropagation();
       const type=btn.dataset.add,preset=furnitureCatalog[type]; if(!preset)return;
       const item={id:'f-'+Date.now(),type,x:42,y:48,...preset};
-      furniture.push(item); companyUI.selectedFurnitureId=item.id; saveFurniture(); renderFurniture(); refreshSelectedFurnitureLabel(); refreshEmployeeDestinations();
+      furniture.push(item); companyUI.selectedFurnitureId=item.id; saveFurniture(); cleanSeatAssignments(); renderFurniture(); refreshSelectedFurnitureLabel(); refreshEmployeeDestinations();
     }));
     document.querySelector('#layoutDeleteBtn')?.addEventListener('click',(ev)=>{
       ev.stopPropagation(); if(!companyUI.selectedFurnitureId)return;
-      furniture=furniture.filter(x=>x.id!==companyUI.selectedFurnitureId); companyUI.selectedFurnitureId=null; saveFurniture(); renderFurniture(); refreshSelectedFurnitureLabel(); refreshEmployeeDestinations();
+      furniture=furniture.filter(x=>x.id!==companyUI.selectedFurnitureId); companyUI.selectedFurnitureId=null; saveFurniture(); cleanSeatAssignments(); renderFurniture(); refreshSelectedFurnitureLabel(); refreshEmployeeDestinations();
     });
     document.querySelector('#layoutResetBtn')?.addEventListener('click',(ev)=>{
-      ev.stopPropagation(); furniture=defaultFurniture.map(x=>({...x})); companyUI.selectedFurnitureId=null; saveFurniture(); renderFurniture(); refreshSelectedFurnitureLabel(); refreshEmployeeDestinations();
+      ev.stopPropagation(); furniture=defaultFurniture.map(x=>({...x})); companyUI.selectedFurnitureId=null; seatAssignments={}; saveSeatAssignments(); saveFurniture(); renderFurniture(); refreshSelectedFurnitureLabel(); refreshEmployeeDestinations();
     });
     office?.addEventListener('pointerdown',(ev)=>{
       if(!companyUI.layoutEdit) return;
@@ -371,15 +381,52 @@
     return furniture
       .filter(item=>deskTypes.includes(item.type))
       .sort((a,b)=>(a.y-b.y)||(a.x-b.x))
-      .flatMap(item=>deskSeatPoints(item).map((seat,seatIndex)=>({...seat,furnitureId:item.id,seatIndex})));
+      .flatMap(item=>deskSeatPoints(item).map((seat,seatIndex)=>({
+        ...seat,
+        furnitureId:item.id,
+        seatIndex,
+        key:`${item.id}:${seatIndex}`
+      })));
+  }
+
+  function cleanSeatAssignments() {
+    const validEmployeeIds=new Set(state.employees.map(e=>e.id));
+    const validSeatKeys=new Set(allWorkSeats().map(s=>s.key));
+    let changed=false;
+    Object.keys(seatAssignments).forEach(employeeId=>{
+      if(!validEmployeeIds.has(employeeId) || !validSeatKeys.has(seatAssignments[employeeId])){
+        delete seatAssignments[employeeId];
+        changed=true;
+      }
+    });
+    if(changed) saveSeatAssignments();
+  }
+
+  function assignSeatForEmployee(employee) {
+    cleanSeatAssignments();
+    const seats=allWorkSeats();
+    if(!seats.length) return null;
+
+    const existingKey=seatAssignments[employee.id];
+    const existing=seats.find(s=>s.key===existingKey);
+    if(existing) return existing;
+
+    const used=new Set(
+      Object.entries(seatAssignments)
+        .filter(([employeeId])=>employeeId!==employee.id)
+        .map(([,seatKey])=>seatKey)
+    );
+    const freeSeat=seats.find(s=>!used.has(s.key));
+    const chosen=freeSeat || seats[Math.abs(hashCode(employee.id||employee.name||''))%seats.length];
+    seatAssignments[employee.id]=chosen.key;
+    saveSeatAssignments();
+    return chosen;
   }
 
   function homeSeatForEmployee(employee,index) {
-    const employees=state.employees.slice(0,9);
-    const seats=allWorkSeats();
-    if(!seats.length) return {point:[18+(index%3)*18,52+Math.floor(index/3)*18],facing:'up'};
-    const employeeIndex=Math.max(0,employees.findIndex(e=>e.id===employee.id));
-    return seats[employeeIndex%seats.length];
+    const assigned=assignSeatForEmployee(employee);
+    if(assigned) return assigned;
+    return {point:[18+(index%3)*18,52+Math.floor(index/3)*18],facing:'up',key:`fallback:${index}`};
   }
 
   function meetingSeatForEmployee(employee,index) {
@@ -721,7 +768,7 @@
     updateSelectedEmployeeStyles();
   });
   const version = document.querySelector('.sidebar-foot small');
-  if (version) version.textContent = 'v1.3.0 · Depth & Scale';
+  if (version) version.textContent = 'v1.3.1 · Auto Seat Assignment';
 
   try {
     renderOffice = renderCompanyOffice;
