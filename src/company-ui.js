@@ -1078,7 +1078,7 @@
     updateSelectedEmployeeStyles();
   });
   const version = document.querySelector('.sidebar-foot small');
-  if (version) version.textContent = 'v1.7.2 · Modal Hitbox Fix';
+  if (version) version.textContent = 'v1.7.3 · Global UI Events Fix';
 
   try {
     renderOffice = renderCompanyOffice;
