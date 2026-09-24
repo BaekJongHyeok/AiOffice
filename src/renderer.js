@@ -284,7 +284,7 @@ function switchView(name){
 function escapeHtml(s=''){return String(s).replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]))}
 
 $('#empProvider')?.addEventListener('change',()=>syncEmployeeModelOptions('auto'));
-$('.nav').forEach(n=>n.onclick=()=>switchView(n.dataset.view));
+$$('.nav').forEach(n=>n.onclick=()=>switchView(n.dataset.view));
 $('#newEmployeeTop')?.addEventListener('click',()=>openEmployeeModal());
 $('#newEmployeeBtn')?.addEventListener('click',()=>openEmployeeModal());
 $('#closeModal')?.addEventListener('click',closeEmployeeModal);
