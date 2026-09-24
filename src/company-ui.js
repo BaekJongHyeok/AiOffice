@@ -44,7 +44,7 @@
 
   const loadSeatAssignments=()=>{
     try{
-      const saved=JSON.parse(localStorage.getItem('aiOfficeSeatAssignmentsV1'));
+      const saved=JSON.parse(localStorage.getItem('aiOfficeSeatAssignmentsV2'));
       return saved && typeof saved==='object' ? saved : {};
     }catch{return {}}
   };
@@ -378,15 +378,25 @@
 
   function allWorkSeats() {
     const deskTypes=['desk-1p','desk-2p','workstation-4p'];
-    return furniture
+    const desks=furniture
       .filter(item=>deskTypes.includes(item.type))
-      .sort((a,b)=>(a.y-b.y)||(a.x-b.x))
-      .flatMap(item=>deskSeatPoints(item).map((seat,seatIndex)=>({
-        ...seat,
-        furnitureId:item.id,
-        seatIndex,
-        key:`${item.id}:${seatIndex}`
-      })));
+      .sort((a,b)=>(a.y-b.y)||(a.x-b.x));
+
+    const seatGroups=desks.map(item=>deskSeatPoints(item).map((seat,seatIndex)=>({
+      ...seat,
+      furnitureId:item.id,
+      seatIndex,
+      key:`${item.id}:${seatIndex}`
+    })));
+
+    const seats=[];
+    const maxSeats=Math.max(0,...seatGroups.map(group=>group.length));
+    for(let seatIndex=0;seatIndex<maxSeats;seatIndex++){
+      seatGroups.forEach(group=>{
+        if(group[seatIndex]) seats.push(group[seatIndex]);
+      });
+    }
+    return seats;
   }
 
   function cleanSeatAssignments() {
@@ -429,7 +439,15 @@
 
     employees.forEach(employee=>{
       if(seatAssignments[employee.id]) return;
-      const freeSeat=seats.find(s=>!used.has(s.key));
+
+      const occupiedFurniture=new Set(
+        [...used].map(key=>String(key).split(':')[0])
+      );
+
+      const freeSeat=
+        seats.find(s=>!used.has(s.key) && !occupiedFurniture.has(s.furnitureId)) ||
+        seats.find(s=>!used.has(s.key));
+
       if(!freeSeat) return;
       seatAssignments[employee.id]=freeSeat.key;
       used.add(freeSeat.key);
@@ -794,7 +812,7 @@
     updateSelectedEmployeeStyles();
   });
   const version = document.querySelector('.sidebar-foot small');
-  if (version) version.textContent = 'v1.3.2 · Seat Reconcile';
+  if (version) version.textContent = 'v1.3.3 · Seat Spread';
 
   try {
     renderOffice = renderCompanyOffice;
