@@ -1185,7 +1185,7 @@
     updateSelectedEmployeeStyles();
   });
   const version = document.querySelector('.sidebar-foot small');
-  if (version) version.textContent = 'v1.6.1 · CEO Same Geometry';
+  if (version) version.textContent = 'v1.6.2 · CEO Tighter Nameplate';
 
   try {
     renderOffice = renderCompanyOffice;
