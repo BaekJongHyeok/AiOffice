@@ -76,7 +76,7 @@ function renderOffice(){
   if(!live.length){stream.className='task-stream empty';stream.innerHTML='대기 중인 업무가 없습니다.'}else{stream.className='task-stream';stream.innerHTML=live.slice(0,8).map(t=>`<div class="task-item" data-task-id="${t.id}"><div class="task-top"><b>${escapeHtml(t.employeeName)}</b><span>${t.status==='working'?'⚡ 작업중':t.status==='opened'?'AI 창 열림':'대기 중'}</span></div><div class="task-meta">${providerLabel[t.provider]} · ${escapeHtml(t.task)}</div><div class="mini-actions"><button class="text-btn open-ai" data-id="${t.id}">AI 열기</button><button class="text-btn finish-task" data-id="${t.id}">결과 입력</button></div></div>`).join('')}
   $$('.open-ai').forEach(b=>b.onclick=()=>openTaskInProvider(b.dataset.id));
   $$('.finish-task').forEach(b=>b.onclick=()=>openResultModal(b.dataset.id));
-  const recent=state.reports.slice(0,3);const rr=$('#recentReports');
+  const recent=state.reports.filter(isReportUsable).sort((a,b)=>(b.finalProjectReport?1:0)-(a.finalProjectReport?1:0)||b.createdAt-a.createdAt).slice(0,3);const rr=$('#recentReports');
   if(!recent.length){rr.className='report-list empty';rr.innerHTML='완료된 보고가 없습니다.'}else{rr.className='report-list';rr.innerHTML=recent.map(r=>`<div class="report-item"><div class="report-top"><b>${escapeHtml(r.employeeName)}</b><span>✅ 완료</span></div><div class="report-meta">${escapeHtml(r.task.slice(0,70))}</div></div>`).join('')}
   $('#reportBadge').textContent=state.reports.length;
 }
@@ -102,10 +102,68 @@ function taskCard(t){
   return `<div class="task-item" data-task-id="${t.id}"><div class="task-top"><b>${escapeHtml(t.employeeName)}</b><span>${t.status==='queued'?'대기':t.status==='working'?'⚡ 작업중':t.status==='opened'?(t.automationError?'⚠ 자동화 실패':'AI 창 열림'):'완료'}</span></div><div class="task-meta">${providerLabel[t.provider]||t.provider} · ${escapeHtml(t.task)}</div>${t.automationError?`<div class="task-error">${escapeHtml(t.automationError)}</div>`:''}${actions}</div>`;
 }
 
+function isReportUsable(report){
+  const text=String(report?.result||'').trim();
+  if(text.length<120) return false;
+  const markers=['[CEO 목표]','[프로젝트]','보고 형식:','당신은 AI 회사'];
+  return markers.filter(m=>text.includes(m)).length<3;
+}
+
+function formatExecutiveReport(text=''){
+  const lines=String(text).split(/\r?\n/);
+  let html='';
+  let inList=false;
+  const closeList=()=>{if(inList){html+='</ul>';inList=false;}};
+  for(const raw of lines){
+    const line=raw.trim();
+    if(!line){closeList();continue}
+    const heading=line.match(/^(?:#{1,3}\s*)?(\d+\.\s+.+|CEO 결론|추천안 TOP 3|실행 계획|근거|숫자로 보는 판단|리스크와 실패 조건|CEO 의사결정 필요사항|바로 실행할 다음 업무)$/i);
+    if(heading){closeList();html+=`<h4>${escapeHtml(line.replace(/^#{1,3}\s*/,''))}</h4>`;continue}
+    if(/^[-*•]\s+/.test(line)){if(!inList){html+='<ul>';inList=true;}html+=`<li>${escapeHtml(line.replace(/^[-*•]\s+/,''))}</li>`;continue}
+    closeList();
+    html+=`<p>${escapeHtml(line)}</p>`;
+  }
+  closeList();
+  return html;
+}
+
 function renderReports(){
   const wrap=$('#reportsFull');
   if(!state.reports.length){wrap.innerHTML='<div class="empty">아직 보고가 없습니다.</div>';return}
-  wrap.innerHTML=state.reports.map(r=>`<article class="report-full"><h3>${escapeHtml(r.employeeName)}의 업무 보고</h3><div class="report-meta">${escapeHtml(r.department)} · ${providerLabel[r.provider]||r.provider} · ${new Date(r.createdAt).toLocaleString()}</div><p><b>지시:</b> ${escapeHtml(r.task)}</p><pre>${escapeHtml(r.result)}</pre></article>`).join('');
+
+  const usable=state.reports.filter(isReportUsable);
+  const finalReports=usable.filter(r=>r.finalProjectReport);
+  const workReports=usable.filter(r=>!r.finalProjectReport);
+  const hiddenCount=state.reports.length-usable.length;
+
+  const finalHtml=finalReports.length
+    ? finalReports.map(r=>{
+        const project=state.projects.find(p=>p.id===r.projectId);
+        return `<article class="report-full executive-report">
+          <div class="executive-kicker">📨 CEO FINAL REPORT</div>
+          <h3>${escapeHtml(project?.name||r.task)}</h3>
+          <div class="report-meta">팀장 ${escapeHtml(r.employeeName)} · ${new Date(r.createdAt).toLocaleString()}</div>
+          <div class="executive-body">${formatExecutiveReport(r.result)}</div>
+        </article>`;
+      }).join('')
+    : '<div class="empty">아직 완성된 프로젝트 최종 보고서가 없습니다.</div>';
+
+  const workHtml=workReports.length
+    ? `<details class="work-report-group"><summary>직원 중간 보고 ${workReports.length}건 보기</summary><div class="work-report-list">${workReports.map(r=>`
+        <article class="report-full work-report">
+          <h3>${escapeHtml(r.employeeName)} · ${escapeHtml(r.department)}</h3>
+          <div class="report-meta">${providerLabel[r.provider]||r.provider} · ${new Date(r.createdAt).toLocaleString()}</div>
+          <p><b>업무:</b> ${escapeHtml(r.task)}</p>
+          <pre>${escapeHtml(r.result)}</pre>
+        </article>`).join('')}</div></details>`
+    : '';
+
+  wrap.innerHTML=`
+    <div class="reports-section-title"><h3>CEO 최종 보고</h3><span>${finalReports.length}건</span></div>
+    ${finalHtml}
+    ${workHtml}
+    ${hiddenCount? `<div class="report-quality-note">⚠ 프롬프트 오인식·미완성 응답 ${hiddenCount}건은 보고서에서 자동 제외했습니다.</div>`:''}
+  `;
 }
 
 async function refreshSessions(){
