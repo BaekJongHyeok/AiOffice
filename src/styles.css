@@ -852,3 +852,51 @@ body{overflow:hidden}.app-shell{height:100vh;min-height:0;overflow:hidden}main{h
 .game-office .sim-returning .employee-status-bubble{
   border-color:#4e84c9!important;
 }
+
+/* v1.5.1 CEO character */
+.company-toolbar-actions{display:flex;align-items:center;gap:10px}
+.ceo-settings-btn{white-space:nowrap}
+
+.game-office .sim-ceo{
+  position:absolute;inset:0;z-index:11;pointer-events:none;
+}
+.game-office .ceo-character-entity{
+  position:absolute;
+  left:var(--x);top:var(--y);
+  width:156px;height:156px;
+  transform:translate(-50%,-68%);
+  z-index:1500;
+  filter:drop-shadow(0 10px 8px #0006);
+}
+.game-office .ceo-character-body{
+  position:absolute;left:50%;top:34px;
+  width:112px;height:112px;
+  transform:translateX(-50%);
+}
+.game-office .ceo-character-body .asset-pixel-avatar,
+.game-office .ceo-character-body .asset-pixel-avatar .asset-sprite{
+  width:112px!important;height:112px!important;
+}
+.game-office .ceo-character-body .asset-pixel-avatar .asset-sprite{
+  background-size:784px 112px!important;
+}
+.game-office .ceo-character-body .asset-pixel-avatar.role-planning .asset-sprite{background-position:0 0!important}
+.game-office .ceo-character-body .asset-pixel-avatar.role-marketing .asset-sprite{background-position:-112px 0!important}
+.game-office .ceo-character-body .asset-pixel-avatar.role-development .asset-sprite{background-position:-224px 0!important}
+.game-office .ceo-character-body .asset-pixel-avatar.role-design .asset-sprite{background-position:-336px 0!important}
+.game-office .ceo-character-body .asset-pixel-avatar.role-analysis .asset-sprite{background-position:-448px 0!important}
+.game-office .ceo-character-body .asset-pixel-avatar.role-qa .asset-sprite{background-position:-560px 0!important}
+.game-office .ceo-character-body .asset-pixel-avatar.role-leader .asset-sprite{background-position:-672px 0!important}
+
+.game-office .ceo-nameplate{
+  position:absolute;left:50%;top:-8px;transform:translateX(-50%);
+  display:flex;align-items:center;gap:5px;
+  padding:4px 8px;border-radius:6px;
+  background:#3a2b17ee;border:2px solid #d7a949;
+  color:#fff7d9;box-shadow:0 4px 0 #0006;
+  white-space:nowrap;z-index:10;
+}
+.game-office .ceo-nameplate b{font-size:9px}
+.game-office .ceo-nameplate small{font-size:7px;color:#ffd36b;font-weight:900}
+
+.ceo-profile-modal-card{width:min(520px,90vw)}
