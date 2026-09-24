@@ -518,3 +518,20 @@ body{overflow:hidden}.app-shell{height:100vh;min-height:0;overflow:hidden}main{h
 }
 .office-item.pixel-furniture{transform-origin:center bottom}
 .layout-editing .office-item.pixel-furniture.selected .atlas-sprite{filter:drop-shadow(0 0 4px #4b9cff) drop-shadow(0 6px 3px #0005)!important}
+
+/* v1.0.2 real PNG furniture */
+.editable-office-floor{
+  background-color:#c99662!important;
+  background-image:url("assets/furniture/floor-wood.png")!important;
+  background-repeat:repeat!important;
+  background-size:96px auto!important;
+  image-rendering:pixelated!important;
+}
+.editable-office-floor:before{display:none!important}
+.office-item.pixel-furniture .real-furniture-image{
+  position:absolute!important;inset:0!important;width:100%!important;height:100%!important;
+  display:block!important;object-fit:contain!important;object-position:center bottom!important;
+  image-rendering:pixelated!important;filter:drop-shadow(0 5px 3px #0005)!important;
+  pointer-events:none!important;background:transparent!important
+}
+.office-item.pixel-furniture .atlas-sprite{background-image:none!important}
