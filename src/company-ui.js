@@ -1185,7 +1185,7 @@
     updateSelectedEmployeeStyles();
   });
   const version = document.querySelector('.sidebar-foot small');
-  if (version) version.textContent = 'v1.5.7 · Nameplate Spacing';
+  if (version) version.textContent = 'v1.5.8 · CEO Nameplate Gap';
 
   try {
     renderOffice = renderCompanyOffice;
