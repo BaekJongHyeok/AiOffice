@@ -118,24 +118,58 @@ function automationScript(prompt) {
   })()`;
 }
 
-function extractionScript() {
+function extractionScript(provider) {
+  const safeProvider = JSON.stringify(provider);
   return `(() => {
-    const selectors = [
-      '[data-message-author-role="assistant"]',
-      '[data-testid*="assistant"]',
-      '[class*="assistant"]',
-      'main article',
-      'main .markdown',
-      'main [class*="response"]'
-    ];
+    const provider = ${safeProvider};
     let nodes = [];
-    for (const s of selectors) {
-      const found = [...document.querySelectorAll(s)].filter(el => el.innerText && el.innerText.trim().length > 20);
-      if (found.length) nodes = found;
+
+    if (provider === 'chatgpt') {
+      nodes = [...document.querySelectorAll('[data-message-author-role="assistant"]')];
+    } else if (provider === 'claude') {
+      nodes = [
+        ...document.querySelectorAll('[data-is-streaming="false"]'),
+        ...document.querySelectorAll('[class*="font-claude-message"]'),
+        ...document.querySelectorAll('[data-testid*="assistant"]')
+      ];
+    } else if (provider === 'gemini') {
+      nodes = [
+        ...document.querySelectorAll('message-content'),
+        ...document.querySelectorAll('.model-response-text'),
+        ...document.querySelectorAll('[data-test-id*="model-response"]')
+      ];
     }
+
+    nodes = nodes.filter(el => {
+      const text = (el.innerText || '').trim();
+      return text.length >= 60;
+    });
+
     const el = nodes[nodes.length - 1];
     return el ? el.innerText.trim() : '';
   })()`;
+}
+
+function isUsableModelResponse(text, prompt) {
+  const value = String(text || '').trim();
+  const source = String(prompt || '').trim();
+
+  if (value.length < 120) return false;
+  if (source && (value === source || source.startsWith(value) || value.startsWith(source.slice(0, Math.min(180, source.length))))) return false;
+
+  const promptLeakMarkers = ['[CEO 목표]', '[프로젝트]', '당신은 AI 회사', '보고 형식:'];
+  const leaked = promptLeakMarkers.filter(marker => value.includes(marker)).length;
+  if (leaked >= 3 && source && source.includes('[CEO 목표]')) return false;
+
+  const incompletePatterns = [
+    /^웹사이트\s*\d+개?\s*검색/i,
+    /^검색\s*중/i,
+    /^thinking/i,
+    /^생각\s*중/i
+  ];
+  if (incompletePatterns.some(re => re.test(value)) && value.length < 400) return false;
+
+  return true;
 }
 
 async function automateSubscription(provider, prompt) {
@@ -173,13 +207,13 @@ async function automateSubscription(provider, prompt) {
     await sleep(2000);
     if (win.isDestroyed()) return { ok:false, stage:'closed', error:'AI 창이 닫혔습니다.' };
     let text = '';
-    try { text = await win.webContents.executeJavaScript(extractionScript(), true); } catch {}
-    if (text && text.length > 20) {
+    try { text = await win.webContents.executeJavaScript(extractionScript(provider), true); } catch {}
+    if (text && isUsableModelResponse(text, prompt)) {
       if (text === last) stable += 1; else { last = text; stable = 0; }
       if (stable >= 2) return { ok:true, result:text, provider, automated:true };
     }
   }
-  return { ok:false, stage:'timeout', error:'답변 자동 회수 시간이 초과되었습니다. 수동 결과 입력을 사용하세요.', partial:last || '' };
+  return { ok:false, stage:'timeout', error:'완성된 AI 답변을 확인하지 못했습니다. 프롬프트/중간 로그는 보고서로 저장하지 않았습니다. 다시 자동 실행하거나 수동 결과 입력을 사용하세요.', partial:isUsableModelResponse(last, prompt) ? last : '' };
 }
 
 app.whenReady().then(() => {
