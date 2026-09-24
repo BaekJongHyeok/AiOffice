@@ -211,10 +211,16 @@
     host.innerHTML=furniture.map(item=>{
       const preset=furnitureCatalog[item.type]||item;
       return `<button class="office-item pixel-furniture ${companyUI.selectedFurnitureId===item.id?'selected':''}" data-id="${item.id}" style="left:${item.x}%;top:${item.y}%;width:${item.w}%;height:${item.h}%">
-        <span class="furniture-sprite atlas-sprite" style="--atlas-x:${preset.col};--atlas-y:${preset.row};--atlas-url:url('${window.AIOFFICE_V10_ATLAS||''}')"></span>
+        <span class="furniture-sprite atlas-sprite" data-col="${preset.col}" data-row="${preset.row}"></span>
         <em>${preset.label||item.label||item.type}</em>
       </button>`;
     }).join('');
+    const atlas=window.AIOFFICE_V10_ATLAS||'';
+    host.querySelectorAll('.atlas-sprite').forEach(sprite=>{
+      sprite.style.backgroundImage=atlas ? `url("${atlas}")` : 'none';
+      sprite.style.setProperty('--atlas-x',sprite.dataset.col||'0');
+      sprite.style.setProperty('--atlas-y',sprite.dataset.row||'0');
+    });
     host.querySelectorAll('.office-item').forEach(el=>{
       el.onclick=(ev)=>{if(!companyUI.layoutEdit)return;ev.stopPropagation();companyUI.selectedFurnitureId=el.dataset.id;renderFurniture()};
       el.onpointerdown=(ev)=>{
@@ -558,7 +564,7 @@
     updateSelectedEmployeeStyles();
   });
   const version = document.querySelector('.sidebar-foot small');
-  if (version) version.textContent = 'v1.0.0 · Pixel Office Assets';
+  if (version) version.textContent = 'v1.0.1 · Furniture Render Fix';
 
   try {
     renderOffice = renderCompanyOffice;
