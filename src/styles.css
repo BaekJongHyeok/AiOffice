@@ -471,3 +471,19 @@ body{overflow:hidden}.app-shell{height:100vh;min-height:0;overflow:hidden}main{h
 /* v0.7.5 center employee portrait in profile frame */
 .game-office .popover-avatar{display:flex!important;align-items:center!important;justify-content:center!important}
 .game-office .popover-avatar .asset-staff-sprite,.game-office .popover-avatar .staff-sprite,.game-office .popover-avatar img{position:relative!important;left:auto!important;top:auto!important;bottom:auto!important;transform:none!important;width:78px!important;height:88px!important;max-width:78px!important;object-fit:contain!important;object-position:center center!important;margin:0!important}
+
+/* v0.8 editable sharp pixel office */
+.game-office{background:#c79a69!important;image-rendering:pixelated}
+.game-office:after{opacity:.08!important;background-size:32px 32px!important}
+.editable-office-floor{position:absolute;inset:0;z-index:0;background:repeating-linear-gradient(0deg,#c99563 0 2px,#d2a36e 2px 30px,#b98253 30px 32px),linear-gradient(90deg,#d7ad79,#c58f5c);image-rendering:pixelated}
+.editable-office-floor:before{content:"";position:absolute;left:0;right:0;top:0;height:32%;background:linear-gradient(#9bcbe2 0 34%,#d9e8e7 34% 37%,#b7865e 37%);border-bottom:6px solid #6d4d36;clip-path:polygon(0 0,100% 0,100% 72%,82% 72%,82% 100%,63% 100%,63% 70%,39% 70%,39% 100%,0 100%)}
+.office-furniture{position:absolute;inset:0;z-index:2;pointer-events:none}.office-item{position:absolute;border:0;background:transparent;pointer-events:none;padding:0;image-rendering:pixelated}.office-item span{display:none}
+.item-desk{background:linear-gradient(#6b452b 0 18%,#a96f42 18% 74%,#593823 74%);border:3px solid #4b3020!important;box-shadow:inset 0 3px #d89a61,0 5px #40291c}
+.item-desk:before{content:"";position:absolute;left:16%;top:-30%;width:27%;height:45%;background:#243d52;border:3px solid #172938;box-shadow:170% 0 0 #243d52}
+.item-sofa{background:#31556b;border:4px solid #233b4b!important;border-radius:4px;box-shadow:inset 0 -8px #244353,0 5px #1b303d}
+.item-meeting,.item-table{background:#875b3b;border:4px solid #583b28!important;border-radius:8px;box-shadow:inset 0 4px #b47d52,0 5px #422c1f}
+.item-server{background:repeating-linear-gradient(0deg,#1e2d36 0 12px,#4d6771 12px 15px);border:4px solid #152129!important;box-shadow:inset 8px 0 #263b46}
+.item-shelf{background:repeating-linear-gradient(90deg,#563923 0 14%,#b76a43 14% 21%,#4d6a78 21% 29%);border:4px solid #4b3020!important}
+.item-plant{background:radial-gradient(ellipse at 50% 25%,#4e934f 0 28%,transparent 30%),radial-gradient(ellipse at 28% 38%,#397a3d 0 24%,transparent 26%),radial-gradient(ellipse at 72% 42%,#5da55a 0 23%,transparent 25%),linear-gradient(90deg,transparent 30%,#8a5837 30% 70%,transparent 70%);filter:drop-shadow(0 4px 1px #0004)}
+.layout-editor-bar{position:absolute;top:10px;right:10px;z-index:25}.layout-edit-btn,.layout-tools button{border:1px solid #bfc9d5;background:#f8fafc;color:#253247;border-radius:6px;padding:7px 10px;font-size:9px;font-weight:800;cursor:pointer;box-shadow:0 2px 6px #0002}.layout-tools{display:none;gap:5px;background:#ffffffed;border:1px solid #ccd4de;padding:7px;border-radius:8px;box-shadow:0 8px 24px #0004}.layout-tools.show{display:flex}.layout-tools .primary{background:#2f7bea;color:#fff;border-color:#2f7bea}
+.layout-editing .office-furniture{pointer-events:auto}.layout-editing .office-item{pointer-events:auto;cursor:grab;outline:1px dashed #ffffff70}.layout-editing .office-item:hover,.layout-editing .office-item.selected{outline:3px solid #4b9cff;filter:drop-shadow(0 0 5px #4b9cff)}.layout-editing .office-item:active{cursor:grabbing}
