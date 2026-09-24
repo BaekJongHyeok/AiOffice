@@ -950,3 +950,48 @@ body{overflow:hidden}.app-shell{height:100vh;min-height:0;overflow:hidden}main{h
 .layout-editing .sim-ceo .ceo-character-entity{
   pointer-events:none!important;
 }
+
+/* v1.5.5 hard reset interaction stacking */
+.game-office .sim-employees{
+  position:absolute!important;
+  inset:0!important;
+  bottom:90px!important;
+  z-index:30!important;
+  pointer-events:auto!important;
+}
+.game-office .sim-employees .sim-employee{
+  pointer-events:auto!important;
+  cursor:grab!important;
+  touch-action:none!important;
+}
+.game-office .sim-employees .sim-employee *{
+  pointer-events:none!important;
+}
+.game-office .sim-ceo{
+  position:absolute!important;
+  inset:0!important;
+  z-index:31!important;
+  pointer-events:none!important;
+}
+.game-office .sim-ceo .ceo-character-entity{
+  pointer-events:auto!important;
+}
+.game-office .sim-ceo .ceo-character-entity *{
+  pointer-events:none!important;
+}
+.game-office .office-furniture{
+  pointer-events:none!important;
+}
+.game-office .office-item{
+  pointer-events:none!important;
+}
+.layout-editing .office-furniture,
+.layout-editing .office-item{
+  pointer-events:auto!important;
+}
+.layout-editing .sim-employees,
+.layout-editing .sim-employees .sim-employee,
+.layout-editing .sim-ceo,
+.layout-editing .sim-ceo .ceo-character-entity{
+  pointer-events:none!important;
+}
