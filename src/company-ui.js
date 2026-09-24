@@ -528,7 +528,7 @@
     updateSelectedEmployeeStyles();
   });
   const version = document.querySelector('.sidebar-foot small');
-  if (version) version.textContent = 'v0.7.3 · Profile Card Fix';
+  if (version) version.textContent = 'v0.7.4 · Portrait Crop';
 
   try {
     renderOffice = renderCompanyOffice;
