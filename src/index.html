@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI OFFICE · Subscription Edition</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar">
+      <div class="brand"><span class="logo">🏢</span><div><strong>AI OFFICE</strong><small>SUBSCRIPTION EDITION</small></div></div>
+      <nav>
+        <button class="nav active" data-view="office">🏠 회사</button>
+        <button class="nav" data-view="employees">👥 직원</button>
+        <button class="nav" data-view="tasks">📋 업무</button>
+        <button class="nav" data-view="reports">📨 보고함 <span id="reportBadge" class="badge">0</span></button>
+        <button class="nav" data-view="settings">🔗 구독 연결</button>
+      </nav>
+      <div class="sidebar-foot"><button id="updateAppBtn" class="btn ghost update-btn">↻ 업데이트 & 재시작</button><span class="status-dot"></span> API 과금 없는 모드<br><small>v0.2.2 · Git Update</small></div>
+    </aside>
+
+    <main>
+      <header class="topbar">
+        <div><h1 id="viewTitle">대표실</h1><p id="viewSubtitle">구독 중인 AI 직원들에게 업무를 지시하세요.</p></div>
+        <button id="newEmployeeTop" class="btn secondary">+ 직원 채용</button>
+      </header>
+
+      <section id="officeView" class="view active">
+        <div class="notice"><b>💳 추가 API 과금 없음</b><span>이 버전은 OpenAI/Anthropic/Google API를 호출하지 않습니다. 구독 웹서비스 창과 작업 큐를 사용합니다.</span></div>
+        <div class="office-grid">
+          <div class="office-stage card">
+            <div class="wall-title">MY AI COMPANY <span>SUBSCRIPTION HQ</span></div>
+            <div class="room meeting"><div class="room-label">회의실</div><div class="table">▦</div></div>
+            <div class="room ceo"><div class="room-label">대표실</div><div class="desk big">💻</div><div class="avatar ceo-avatar">👑</div><div class="nameplate">CEO · 나</div></div>
+            <div id="employeeFloor" class="employee-floor"></div>
+          </div>
+          <div class="command card">
+            <div class="card-head"><h2>CEO 업무 지시</h2><span id="busyCount" class="pill">0건 대기</span></div>
+            <textarea id="taskInput" placeholder="예: 신규 뷰티 브랜드 런칭 전략을 조사하고 실행안을 만들어줘."></textarea>
+            <label>업무를 맡길 직원</label>
+            <div id="assigneeList" class="assignee-list"></div>
+            <div class="command-row"><button id="selectAllBtn" class="btn ghost">전체 선택</button><button id="runTaskBtn" class="btn primary">▶ 업무 배정</button></div>
+            <div class="hint">구독 직원은 업무 큐에 등록됩니다. AI 창을 열면 역할 프롬프트가 클립보드에 복사됩니다.</div>
+          </div>
+        </div>
+        <div class="lower-grid">
+          <div class="card"><div class="card-head"><h2>실시간 업무 현황</h2></div><div id="liveTasks" class="task-stream empty">대기 중인 업무가 없습니다.</div></div>
+          <div class="card"><div class="card-head"><h2>최근 보고</h2><button id="goReports" class="text-btn">전체 보기</button></div><div id="recentReports" class="report-list empty">완료된 보고가 없습니다.</div></div>
+        </div>
+      </section>
+
+      <section id="employeesView" class="view">
+        <div class="section-actions"><div><h2>직원 관리</h2><p>각 직원에게 사용할 구독 AI와 역할을 지정합니다.</p></div><button id="newEmployeeBtn" class="btn primary">+ 새 직원 채용</button></div>
+        <div id="employeeCards" class="employee-cards"></div>
+      </section>
+
+      <section id="tasksView" class="view">
+        <div class="section-actions"><div><h2>업무 보드</h2><p>구독 AI로 전달할 업무와 완료 결과를 관리합니다.</p></div></div>
+        <div id="taskBoard" class="board"></div>
+      </section>
+
+      <section id="reportsView" class="view">
+        <div class="section-actions"><div><h2>CEO 보고함</h2><p>직원별 최종 결과입니다.</p></div><button id="clearReports" class="btn ghost">보고함 비우기</button></div>
+        <div id="reportsFull" class="reports-full"></div>
+      </section>
+
+      <section id="settingsView" class="view">
+        <div class="subscription-grid" id="subscriptionCards"></div>
+        <div class="card settings-card sub-help">
+          <h2>이 방식은 어떻게 작동하나요?</h2>
+          <p class="muted">각 서비스 버튼을 누르면 AI OFFICE 전용 브라우저 세션이 열립니다. 그 창에서 직접 로그인하면 세션이 PC에 유지됩니다. AI OFFICE는 계정 비밀번호를 입력받거나 저장하지 않습니다.</p>
+          <div class="tip"><b>중요:</b> 이 버전은 유료 API를 전혀 호출하지 않습니다. 다만 각 구독 서비스 자체의 메시지/사용량 한도는 그대로 적용됩니다. 웹 UI 자동조작은 서비스 변경에 쉽게 깨질 수 있어 v0.2에서는 안전한 작업 큐 + 구독창 연결 방식으로 구현했습니다.</div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <div id="employeeModal" class="modal hidden">
+    <div class="modal-card">
+      <div class="modal-head"><h2 id="modalTitle">새 직원 채용</h2><button id="closeModal" class="icon-btn">✕</button></div>
+      <div class="form-grid">
+        <label>이름<input id="empName" placeholder="김기획" /></label>
+        <label>직급<select id="empRank"><option>사원</option><option>대리</option><option>과장</option><option>팀장</option></select></label>
+        <label>부서<input id="empDept" placeholder="마케팅팀" /></label>
+        <label>구독 AI<select id="empProvider"><option value="chatgpt">ChatGPT</option><option value="claude">Claude</option><option value="gemini">Gemini</option><option value="demo">Demo (테스트)</option></select></label>
+        <label class="wide">담당 역할<input id="empRole" placeholder="시장 조사 및 전략 기획" /></label>
+        <label class="wide">성격 / 업무 스타일<textarea id="empTraits" placeholder="꼼꼼하고 숫자를 중요하게 본다. 보고는 간결하게 한다."></textarea></label>
+      </div>
+      <div class="modal-actions"><button id="cancelEmployee" class="btn ghost">취소</button><button id="saveEmployee" class="btn primary">채용하기</button></div>
+    </div>
+  </div>
+
+  <div id="resultModal" class="modal hidden">
+    <div class="modal-card">
+      <div class="modal-head"><h2>업무 결과 보고</h2><button id="closeResultModal" class="icon-btn">✕</button></div>
+      <p id="resultTaskSummary" class="muted"></p>
+      <label class="result-label">AI가 작성한 결과를 붙여넣으세요.</label>
+      <textarea id="resultText" class="result-textarea" placeholder="ChatGPT / Claude / Gemini의 답변을 여기에 붙여넣기"></textarea>
+      <div class="modal-actions"><button id="cancelResult" class="btn ghost">취소</button><button id="saveResult" class="btn primary">✅ 보고 완료</button></div>
+    </div>
+  </div>
+
+  <script src="renderer.js"></script>
+</body>
+</html>
