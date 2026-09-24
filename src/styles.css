@@ -487,3 +487,16 @@ body{overflow:hidden}.app-shell{height:100vh;min-height:0;overflow:hidden}main{h
 .item-plant{background:radial-gradient(ellipse at 50% 25%,#4e934f 0 28%,transparent 30%),radial-gradient(ellipse at 28% 38%,#397a3d 0 24%,transparent 26%),radial-gradient(ellipse at 72% 42%,#5da55a 0 23%,transparent 25%),linear-gradient(90deg,transparent 30%,#8a5837 30% 70%,transparent 70%);filter:drop-shadow(0 4px 1px #0004)}
 .layout-editor-bar{position:absolute;top:10px;right:10px;z-index:25}.layout-edit-btn,.layout-tools button{border:1px solid #bfc9d5;background:#f8fafc;color:#253247;border-radius:6px;padding:7px 10px;font-size:9px;font-weight:800;cursor:pointer;box-shadow:0 2px 6px #0002}.layout-tools{display:none;gap:5px;background:#ffffffed;border:1px solid #ccd4de;padding:7px;border-radius:8px;box-shadow:0 8px 24px #0004}.layout-tools.show{display:flex}.layout-tools .primary{background:#2f7bea;color:#fff;border-color:#2f7bea}
 .layout-editing .office-furniture{pointer-events:auto}.layout-editing .office-item{pointer-events:auto;cursor:grab;outline:1px dashed #ffffff70}.layout-editing .office-item:hover,.layout-editing .office-item.selected{outline:3px solid #4b9cff;filter:drop-shadow(0 0 5px #4b9cff)}.layout-editing .office-item:active{cursor:grabbing}
+
+/* v0.9 real pixel PNG furniture */
+.office-item.pixel-furniture{background:none!important;border:0!important;box-shadow:none!important;overflow:visible}
+.office-item.pixel-furniture:before,.office-item.pixel-furniture:after{display:none!important}
+.furniture-sprite{position:absolute;inset:0;display:block;background-repeat:no-repeat;background-size:300% 300%;background-position:calc(var(--fx) * 50%) calc(var(--fy) * 50%);image-rendering:pixelated;filter:drop-shadow(0 5px 4px #0005);pointer-events:none}
+.office-item.pixel-furniture em{display:none;position:absolute;left:50%;bottom:-16px;transform:translateX(-50%);padding:2px 5px;border-radius:4px;background:#14243de8;color:#fff;font-style:normal;font-size:7px;white-space:nowrap;pointer-events:none}
+.layout-editing .office-item.pixel-furniture em{display:block}
+.layout-editing .office-item.pixel-furniture{outline:1px dashed #ffffff88!important;border-radius:4px}
+.layout-editing .office-item.pixel-furniture:hover,.layout-editing .office-item.pixel-furniture.selected{outline:3px solid #4b9cff!important;filter:none!important}
+.layout-editing .office-item.pixel-furniture.selected .furniture-sprite{filter:drop-shadow(0 0 5px #4b9cff) drop-shadow(0 6px 4px #0005)}
+
+/* v0.9.0 individual furniture image sizing */
+.office-item.pixel-furniture .furniture-sprite{width:100%!important;height:100%!important;object-fit:contain!important;object-position:center bottom!important;background:none!important}
