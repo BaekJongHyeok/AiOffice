@@ -393,34 +393,57 @@
     const validEmployeeIds=new Set(state.employees.map(e=>e.id));
     const validSeatKeys=new Set(allWorkSeats().map(s=>s.key));
     let changed=false;
+    const seen=new Set();
+
     Object.keys(seatAssignments).forEach(employeeId=>{
-      if(!validEmployeeIds.has(employeeId) || !validSeatKeys.has(seatAssignments[employeeId])){
+      const seatKey=seatAssignments[employeeId];
+      const invalid=!validEmployeeIds.has(employeeId)||!validSeatKeys.has(seatKey)||seen.has(seatKey);
+      if(invalid){
         delete seatAssignments[employeeId];
         changed=true;
+      }else{
+        seen.add(seatKey);
       }
     });
+
     if(changed) saveSeatAssignments();
   }
 
-  function assignSeatForEmployee(employee) {
+  function reconcileSeatAssignments() {
+    const seats=allWorkSeats();
+    const employees=state.employees.slice(0,9);
     cleanSeatAssignments();
+    if(!seats.length) return;
+
+    const seatByKey=new Map(seats.map(s=>[s.key,s]));
+    const used=new Set();
+
+    employees.forEach(employee=>{
+      const key=seatAssignments[employee.id];
+      if(key && seatByKey.has(key) && !used.has(key)){
+        used.add(key);
+        return;
+      }
+      delete seatAssignments[employee.id];
+    });
+
+    employees.forEach(employee=>{
+      if(seatAssignments[employee.id]) return;
+      const freeSeat=seats.find(s=>!used.has(s.key));
+      if(!freeSeat) return;
+      seatAssignments[employee.id]=freeSeat.key;
+      used.add(freeSeat.key);
+    });
+
+    saveSeatAssignments();
+  }
+
+  function assignSeatForEmployee(employee) {
+    reconcileSeatAssignments();
     const seats=allWorkSeats();
     if(!seats.length) return null;
-
-    const existingKey=seatAssignments[employee.id];
-    const existing=seats.find(s=>s.key===existingKey);
-    if(existing) return existing;
-
-    const used=new Set(
-      Object.entries(seatAssignments)
-        .filter(([employeeId])=>employeeId!==employee.id)
-        .map(([,seatKey])=>seatKey)
-    );
-    const freeSeat=seats.find(s=>!used.has(s.key));
-    const chosen=freeSeat || seats[Math.abs(hashCode(employee.id||employee.name||''))%seats.length];
-    seatAssignments[employee.id]=chosen.key;
-    saveSeatAssignments();
-    return chosen;
+    const key=seatAssignments[employee.id];
+    return seats.find(s=>s.key===key) || null;
   }
 
   function homeSeatForEmployee(employee,index) {
@@ -479,6 +502,7 @@
     }
 
     const visibleEmployees = state.employees.slice(0,9);
+    reconcileSeatAssignments();
     const liveIds = new Set(visibleEmployees.map(e => e.id));
 
     wrap.querySelectorAll('.sim-employee').forEach(el => {
@@ -524,6 +548,8 @@
       el.className = `sim-employee ${selected?'selected':''} sim-${vstate} ${placement.seated?'seat-seated':''} seat-facing-${placement.facing||'up'}`;
       el.dataset.seated = placement.seated ? '1' : '0';
       el.dataset.facing = placement.facing || 'up';
+      const assignedSeat=seatAssignments[employee.id];
+      if(assignedSeat) el.dataset.seatKey=assignedSeat;
       el.style.setProperty('--x', `${pos[0]}%`);
       el.style.setProperty('--y', `${pos[1]}%`);
       el.style.setProperty('--employee-depth', String(1000+Math.round(pos[1]*10)));
@@ -768,7 +794,7 @@
     updateSelectedEmployeeStyles();
   });
   const version = document.querySelector('.sidebar-foot small');
-  if (version) version.textContent = 'v1.3.1 · Auto Seat Assignment';
+  if (version) version.textContent = 'v1.3.2 · Seat Reconcile';
 
   try {
     renderOffice = renderCompanyOffice;
