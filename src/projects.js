@@ -422,5 +422,8 @@
 
   ensureTaskManager();
   ensureTaskButtons();
+  const version = document.querySelector('.sidebar-foot small');
+  if (version) version.textContent = 'v0.4.0 · Project Manager';
+
   renderProjects();
 })();
