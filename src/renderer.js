@@ -178,8 +178,10 @@ function saveResult(){
   const t=state.tasks.find(x=>x.id===state.resultTaskId); if(!t) return;
   const result=$('#resultText').value.trim(); if(!result){alert('AI 결과를 붙여넣으세요.');return}
   t.status='done';t.finishedAt=Date.now();
-  state.reports.unshift({id:uid(),employeeId:t.employeeId,employeeName:t.employeeName,department:t.department,provider:t.provider,task:t.task,taskId:t.id,projectId:t.projectId||null,result,createdAt:Date.now()});
+  const report={id:uid(),employeeId:t.employeeId,employeeName:t.employeeName,department:t.department,provider:t.provider,task:t.task,taskId:t.id,projectId:t.projectId||null,result,createdAt:Date.now()};
+  state.reports.unshift(report);
   persist();closeResultModal();renderAll();
+  window.dispatchEvent(new CustomEvent('ai-office-task-completed', { detail:{ taskId:t.id, reportId:report.id } }));
 }
 
 function switchView(name){
