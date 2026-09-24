@@ -211,7 +211,7 @@
     host.innerHTML=furniture.map(item=>{
       const preset=furnitureCatalog[item.type]||item;
       return `<button class="office-item pixel-furniture ${companyUI.selectedFurnitureId===item.id?'selected':''}" data-id="${item.id}" style="left:${item.x}%;top:${item.y}%;width:${item.w}%;height:${item.h}%">
-        <span class="furniture-sprite atlas-sprite" style="--atlas-x:${preset.col};--atlas-y:${preset.row};background-image:url('${window.AIOFFICE_V10_ATLAS||''}')"></span>
+        <span class="furniture-sprite atlas-sprite" style="--atlas-x:${preset.col};--atlas-y:${preset.row};--atlas-url:url('${window.AIOFFICE_V10_ATLAS||''}')"></span>
         <em>${preset.label||item.label||item.type}</em>
       </button>`;
     }).join('');
