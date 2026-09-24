@@ -195,7 +195,7 @@
             <button id="layoutEditBtn" class="layout-edit-btn">✥ 배치 편집</button>
             <div id="layoutTools" class="layout-tools">
               <div class="layout-help"><b>배치 편집</b><span id="selectedFurnitureLabel">가구를 클릭해서 선택하고 드래그하세요.</span></div>
-              <div class="seat-drag-help">👤 직원을 원하는 책상 위로 드래그하면 빈 좌석에 자동 배정됩니다.</div>
+
               <div class="layout-add-group">
                 <button data-add="desk-1p">+ 1인 책상</button><button data-add="desk-2p">+ 2인 책상</button><button data-add="workstation-4p">+ 4인 책상</button><button data-add="meeting-table">+ 회의 테이블</button><button data-add="bookshelf">+ 책장</button><button data-add="server-rack">+ 서버랙</button><button data-add="office-corner">+ 정수기</button><button data-add="plant-large">+ 화분</button>
               </div>
@@ -597,7 +597,15 @@
           <div class="employee-character"></div>
           <div class="employee-task-caption"></div>
         `;
+        let suppressNextClick=false;
+
         el.onclick = (event) => {
+          if(suppressNextClick){
+            suppressNextClick=false;
+            event.preventDefault();
+            event.stopPropagation();
+            return;
+          }
           if(companyUI.layoutEdit) return;
           event.stopPropagation();
           companyUI.selectedEmployeeId = companyUI.selectedEmployeeId === el.dataset.id ? null : el.dataset.id;
@@ -608,27 +616,40 @@
         };
 
         el.addEventListener('pointerdown',(event)=>{
-          if(!companyUI.layoutEdit) return;
-          event.preventDefault();
-          event.stopPropagation();
+          if(companyUI.layoutEdit) return;
+          if(event.button!==undefined && event.button!==0) return;
 
           const pointerId=event.pointerId;
           const office=document.querySelector('.game-office');
           if(!office) return;
+
           const officeRect=office.getBoundingClientRect();
           const startX=event.clientX,startY=event.clientY;
           const startLeft=parseFloat(el.style.getPropertyValue('--x'))||0;
           const startTop=parseFloat(el.style.getPropertyValue('--y'))||0;
-          let moved=false;
+          let dragging=false;
 
-          el.classList.add('employee-dragging');
-          try{el.setPointerCapture(pointerId)}catch{}
+          const beginDrag=(e)=>{
+            if(dragging) return;
+            dragging=true;
+            suppressNextClick=true;
+            companyUI.selectedEmployeeId=null;
+            companyUI.openReportId=null;
+            companyUI.dialogSignature='';
+            renderEmployeeDialog();
+            el.classList.add('employee-dragging');
+            try{el.setPointerCapture(pointerId)}catch{}
+          };
 
           const move=(e)=>{
             if(e.pointerId!==pointerId) return;
+            const pixelDistance=Math.hypot(e.clientX-startX,e.clientY-startY);
+            if(!dragging && pixelDistance>=7) beginDrag(e);
+            if(!dragging) return;
+
+            e.preventDefault();
             const dx=(e.clientX-startX)/officeRect.width*100;
             const dy=(e.clientY-startY)/officeRect.height*100;
-            if(Math.abs(dx)>0.5||Math.abs(dy)>0.5) moved=true;
             const x=Math.max(3,Math.min(97,startLeft+dx));
             const y=Math.max(8,Math.min(82,startTop+dy));
             el.style.setProperty('--x',x+'%');
@@ -644,11 +665,13 @@
           const up=(e)=>{
             if(e.pointerId!==pointerId) return;
             try{el.releasePointerCapture(pointerId)}catch{}
-            el.classList.remove('employee-dragging');
             el.removeEventListener('pointermove',move);
             el.removeEventListener('pointerup',up);
             el.removeEventListener('pointercancel',up);
 
+            if(!dragging) return;
+
+            el.classList.remove('employee-dragging');
             let targetDesk=null;
             document.querySelectorAll('.office-item.depth-desk').forEach(desk=>{
               const r=desk.getBoundingClientRect();
@@ -657,7 +680,7 @@
               if(over) targetDesk=desk;
             });
 
-            if(moved&&targetDesk){
+            if(targetDesk){
               const seat=nearestSeatOnDesk(employee.id,targetDesk.dataset.id,e.clientX,e.clientY);
               if(seat) assignSeatExplicit(employee.id,seat.key);
             }
@@ -923,7 +946,7 @@
     updateSelectedEmployeeStyles();
   });
   const version = document.querySelector('.sidebar-foot small');
-  if (version) version.textContent = 'v1.4.1 · Drag Desk Assignment';
+  if (version) version.textContent = 'v1.4.2 · Direct Employee Drag';
 
   try {
     renderOffice = renderCompanyOffice;
