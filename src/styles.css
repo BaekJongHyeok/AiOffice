@@ -1187,3 +1187,220 @@ body > .modal label{
 #employeeModal .modal-card{
   z-index:110001!important;
 }
+
+/* v1.7.6 responsive application layout */
+html,body{
+  width:100%;
+  height:100%;
+  min-width:0!important;
+}
+.app-shell{
+  width:100%;
+  min-width:0!important;
+}
+main{
+  min-width:0!important;
+}
+.view.active{
+  min-width:0!important;
+}
+
+/* Full desktop: keep office + command side by side */
+.game-company-layout{
+  grid-template-columns:minmax(0,1fr) minmax(320px,360px)!important;
+  align-items:start!important;
+}
+.game-office{
+  width:100%!important;
+  min-width:0!important;
+}
+.game-command-panel{
+  width:100%!important;
+  min-width:0!important;
+}
+
+/* Medium desktop / resized Electron window */
+@media (max-width: 1580px){
+  body{
+    overflow:hidden!important;
+  }
+  main{
+    padding:0 18px 24px!important;
+    overflow-y:auto!important;
+    overflow-x:hidden!important;
+  }
+  .view.active{
+    height:auto!important;
+    min-height:calc(100vh - 96px)!important;
+    overflow:visible!important;
+    padding-bottom:28px!important;
+  }
+  .game-company-layout{
+    grid-template-columns:minmax(0,1fr)!important;
+    gap:14px!important;
+  }
+  .game-command-panel{
+    min-height:0!important;
+    height:auto!important;
+  }
+  .ceo-directive-panel{
+    min-height:0!important;
+  }
+  .game-command-panel #taskInput{
+    min-height:110px!important;
+  }
+  .ceo-assignees{
+    min-height:0!important;
+    max-height:180px!important;
+  }
+  .company-toolbar{
+    gap:14px!important;
+    flex-wrap:wrap!important;
+  }
+  .company-toolbar-actions{
+    margin-left:auto!important;
+    flex-wrap:wrap!important;
+    justify-content:flex-end!important;
+  }
+  .company-stats{
+    flex-wrap:wrap!important;
+    justify-content:flex-end!important;
+  }
+}
+
+/* Compact desktop */
+@media (max-width: 1240px){
+  .app-shell{
+    grid-template-columns:82px minmax(0,1fr)!important;
+  }
+  .sidebar{
+    padding:16px 9px!important;
+  }
+  .brand{
+    justify-content:center!important;
+    padding:5px 4px 20px!important;
+  }
+  .brand>div{
+    display:none!important;
+  }
+  .logo{
+    font-size:27px!important;
+  }
+  .nav{
+    font-size:0!important;
+    text-align:center!important;
+    padding:11px 6px!important;
+    min-height:44px!important;
+  }
+  .nav::first-letter{
+    font-size:18px;
+  }
+  .badge{
+    float:none!important;
+    display:inline-block!important;
+    margin-left:3px!important;
+    font-size:8px!important;
+    min-width:15px!important;
+    padding:1px 4px!important;
+  }
+  .sidebar-foot{
+    padding:8px 2px!important;
+    font-size:0!important;
+  }
+  .sidebar-foot .update-btn{
+    font-size:0!important;
+    padding:10px 4px!important;
+  }
+  .sidebar-foot .update-btn::before{
+    content:"↻";
+    font-size:18px!important;
+  }
+  .sidebar-foot .status-dot,
+  .sidebar-foot br,
+  .sidebar-foot small{
+    display:none!important;
+  }
+  main{
+    padding:0 14px 20px!important;
+  }
+  .topbar{
+    height:78px!important;
+  }
+  .topbar h1{
+    font-size:22px!important;
+  }
+  .topbar p{
+    font-size:11px!important;
+  }
+  .company-toolbar{
+    padding:14px 15px!important;
+  }
+  .company-toolbar h2{
+    font-size:18px!important;
+  }
+  .company-toolbar p{
+    font-size:10px!important;
+  }
+  .company-stats>div{
+    min-width:62px!important;
+    padding:7px 8px!important;
+  }
+  .game-office{
+    min-height:620px!important;
+  }
+  .game-command-panel{
+    padding:16px!important;
+  }
+}
+
+/* Smallest supported desktop window */
+@media (max-width: 980px){
+  .app-shell{
+    grid-template-columns:66px minmax(0,1fr)!important;
+  }
+  main{
+    padding:0 10px 16px!important;
+  }
+  .topbar{
+    height:70px!important;
+  }
+  .topbar p{
+    display:none!important;
+  }
+  .company-toolbar{
+    align-items:flex-start!important;
+  }
+  .company-toolbar>div:first-child{
+    width:100%!important;
+  }
+  .company-toolbar-actions{
+    width:100%!important;
+    margin-left:0!important;
+    justify-content:space-between!important;
+  }
+  .company-stats{
+    flex:1!important;
+    display:grid!important;
+    grid-template-columns:repeat(4,minmax(0,1fr))!important;
+  }
+  .company-stats>div{
+    min-width:0!important;
+  }
+  .game-office{
+    min-height:560px!important;
+  }
+  .ceo-directive-actions{
+    grid-template-columns:1fr 2fr!important;
+  }
+  .form-grid{
+    grid-template-columns:1fr!important;
+  }
+  .form-grid .wide{
+    grid-column:auto!important;
+  }
+  body > .modal .modal-card{
+    width:min(650px,calc(100vw - 28px))!important;
+    max-height:calc(100vh - 28px)!important;
+    overflow:auto!important;
+  }
+}
