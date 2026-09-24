@@ -46,7 +46,7 @@
       task.status = 'done';
       task.finishedAt = Date.now();
       task.automated = true;
-      state.reports.unshift({
+      const report = {
         id: uid(),
         employeeId: task.employeeId,
         employeeName: task.employeeName,
@@ -58,7 +58,9 @@
         result: result.result,
         createdAt: Date.now(),
         automated: true,
-      });
+      };
+      state.reports.unshift(report);
+      window.dispatchEvent(new CustomEvent('ai-office-task-completed', { detail:{ taskId:task.id, reportId:report.id } }));
     } else {
       task.status = 'opened';
       task.automationError = result?.error || '자동 실행에 실패했습니다.';
