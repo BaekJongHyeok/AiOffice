@@ -97,10 +97,23 @@
     }, 80);
   });
 
-  const observer = new MutationObserver(() => ensureControls());
-  observer.observe(document.body, { childList: true, subtree: true });
+  let controlSyncPending = false;
+  const scheduleControls = () => {
+    if (controlSyncPending) return;
+    controlSyncPending = true;
+    requestAnimationFrame(() => {
+      controlSyncPending = false;
+      ensureControls();
+    });
+  };
+
+  const taskBoard = document.querySelector('#taskBoard');
+  const liveTasks = document.querySelector('#liveTasks');
+  const observer = new MutationObserver(scheduleControls);
+  if (taskBoard) observer.observe(taskBoard, { childList:true, subtree:true });
+  if (liveTasks) observer.observe(liveTasks, { childList:true, subtree:true });
   ensureControls();
 
   const version = document.querySelector('.sidebar-foot small');
-  if (version) version.textContent = 'v0.3.0 · Subscription Automation';
+  if (version) version.textContent = 'v0.4.3 · Report Quality';
 })();
