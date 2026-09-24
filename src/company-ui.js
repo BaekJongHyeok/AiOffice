@@ -680,119 +680,6 @@
     return employeePlacement(employee,index,visualState).point;
   }
 
-  function renderCeoCharacter() {
-    const host=document.querySelector('#simEmployees');
-    if(!host) return;
-
-    const ceo=ceoAsEmployee();
-    const [x,y]=ceoCharacterPoint();
-    let el=host.querySelector('.sim-employee[data-id="__ceo__"]');
-
-    if(!el){
-      el=document.createElement('button');
-      el.type='button';
-      el.className='sim-employee ceo-employee';
-      el.dataset.id='__ceo__';
-      el.innerHTML=`
-        <div class="employee-status-bubble ceo-status-bubble">
-          <span class="status-dot-mini done"></span>
-          <b></b>
-          <small>CEO · 대표</small>
-        </div>
-        <div class="employee-character"></div>
-        <div class="employee-task-caption">대표 자리</div>
-      `;
-
-      let suppressNextClick=false;
-      el.onclick=(event)=>{
-        if(suppressNextClick){
-          suppressNextClick=false;
-          event.preventDefault();
-          event.stopPropagation();
-          return;
-        }
-        if(companyUI.layoutEdit) return;
-        event.stopPropagation();
-        document.querySelector('#ceoSettingsBtn')?.click();
-      };
-
-      el.addEventListener('pointerdown',(event)=>{
-        if(companyUI.layoutEdit) return;
-        if(event.button!==undefined && event.button!==0) return;
-
-        const pointerId=event.pointerId;
-        const office=document.querySelector('.game-office');
-        if(!office) return;
-
-        const rect=office.getBoundingClientRect();
-        const startX=event.clientX,startY=event.clientY;
-        const startLeft=parseFloat(el.style.getPropertyValue('--x'))||x;
-        const startTop=parseFloat(el.style.getPropertyValue('--y'))||y;
-        let dragging=false;
-
-        const move=(e)=>{
-          if(e.pointerId!==pointerId) return;
-          const distance=Math.hypot(e.clientX-startX,e.clientY-startY);
-          if(!dragging && distance>=7){
-            dragging=true;
-            suppressNextClick=true;
-            el.classList.add('employee-dragging','ceo-dragging');
-            try{el.setPointerCapture(pointerId)}catch{}
-          }
-          if(!dragging) return;
-
-          e.preventDefault();
-          const dx=(e.clientX-startX)/rect.width*100;
-          const dy=(e.clientY-startY)/rect.height*100;
-          el.style.setProperty('--x',Math.max(3,Math.min(97,startLeft+dx))+'%');
-          el.style.setProperty('--y',Math.max(8,Math.min(82,startTop+dy))+'%');
-
-          document.querySelectorAll('.office-item.ceo-depth-desk').forEach(desk=>{
-            const r=desk.getBoundingClientRect();
-            const over=e.clientX>=r.left&&e.clientX<=r.right&&e.clientY>=r.top&&e.clientY<=r.bottom;
-            desk.classList.toggle('ceo-drop-target',over);
-          });
-        };
-
-        const up=(e)=>{
-          if(e.pointerId!==pointerId) return;
-          try{el.releasePointerCapture(pointerId)}catch{}
-          el.removeEventListener('pointermove',move);
-          el.removeEventListener('pointerup',up);
-          el.removeEventListener('pointercancel',up);
-
-          if(!dragging) return;
-          el.classList.remove('employee-dragging','ceo-dragging');
-
-          let validDrop=false;
-          document.querySelectorAll('.office-item.ceo-depth-desk').forEach(desk=>{
-            const r=desk.getBoundingClientRect();
-            const over=e.clientX>=r.left&&e.clientX<=r.right&&e.clientY>=r.top&&e.clientY<=r.bottom;
-            desk.classList.remove('ceo-drop-target');
-            if(over) validDrop=true;
-          });
-
-          renderCeoCharacter();
-          if(validDrop) refreshEmployeeDestinations();
-        };
-
-        el.addEventListener('pointermove',move);
-        el.addEventListener('pointerup',up);
-        el.addEventListener('pointercancel',up);
-      });
-
-      host.appendChild(el);
-    }
-
-    el.className='sim-employee ceo-employee seat-facing-down';
-    el.style.setProperty('--x',x+'%');
-    el.style.setProperty('--y',y+'%');
-    el.style.setProperty('--employee-depth',String(1000+Math.round(y*10)));
-    el.querySelector('.employee-status-bubble b').textContent=ceo.name;
-    const character=el.querySelector('.employee-character');
-    character.innerHTML=pixelAvatar(ceo,'idle');
-  }
-
 
   function renderCompanyOffice() {
     if (!document.querySelector('#simEmployees')) buildCompanyShell();
@@ -803,23 +690,24 @@
       companyUI.selectedEmployeeId = null;
     }
 
-    const visibleEmployees = state.employees.slice(0,9);
+    const visibleEmployees = [ceoAsEmployee(), ...state.employees.slice(0,9)];
     reconcileSeatAssignments();
-    const liveIds = new Set(['__ceo__',...visibleEmployees.map(e => e.id)]);
+    const liveIds = new Set(visibleEmployees.map(e => e.id));
 
     wrap.querySelectorAll('.sim-employee').forEach(el => {
       if (!liveIds.has(el.dataset.id)) el.remove();
     });
 
-    renderCeoCharacter();
-
     visibleEmployees.forEach((employee,index) => {
-      const vstate = employeeVisualState(employee);
-      const placement = employeePlacement(employee,index,vstate);
+      const isCeo = employee.id === '__ceo__';
+      const vstate = isCeo ? 'idle' : employeeVisualState(employee);
+      const placement = isCeo
+        ? {point:ceoCharacterPoint(),facing:'down',seated:false}
+        : employeePlacement(employee,index-1,vstate);
       const pos = placement.point;
-      const meta = statusMeta[vstate] || statusMeta.idle;
-      const task = activeTask(employee.id) || recentDoneTask(employee.id);
-      const selected = companyUI.selectedEmployeeId === employee.id;
+      const meta = isCeo ? ['대표','CEO','👑'] : (statusMeta[vstate] || statusMeta.idle);
+      const task = isCeo ? null : (activeTask(employee.id) || recentDoneTask(employee.id));
+      const selected = !isCeo && companyUI.selectedEmployeeId === employee.id;
 
       let el = wrap.querySelector(`.sim-employee[data-id="${employee.id}"]`);
       if (!el) {
@@ -847,6 +735,10 @@
           }
           if(companyUI.layoutEdit) return;
           event.stopPropagation();
+          if(employee.id==='__ceo__'){
+            document.querySelector('#ceoSettingsBtn')?.click();
+            return;
+          }
           companyUI.selectedEmployeeId = companyUI.selectedEmployeeId === el.dataset.id ? null : el.dataset.id;
           companyUI.openReportId = null;
           companyUI.dialogSignature = '';
@@ -894,7 +786,10 @@
             el.style.setProperty('--x',x+'%');
             el.style.setProperty('--y',y+'%');
 
-            document.querySelectorAll('.office-item.depth-desk').forEach(desk=>{
+            const targetSelector=employee.id==='__ceo__'
+              ? '.office-item.ceo-depth-desk'
+              : '.office-item.depth-desk:not(.ceo-depth-desk)';
+            document.querySelectorAll(targetSelector).forEach(desk=>{
               const r=desk.getBoundingClientRect();
               const over=e.clientX>=r.left&&e.clientX<=r.right&&e.clientY>=r.top&&e.clientY<=r.bottom;
               desk.classList.toggle('employee-drop-target',over);
@@ -912,14 +807,17 @@
 
             el.classList.remove('employee-dragging');
             let targetDesk=null;
-            document.querySelectorAll('.office-item.depth-desk').forEach(desk=>{
+            const targetSelector=employee.id==='__ceo__'
+              ? '.office-item.ceo-depth-desk'
+              : '.office-item.depth-desk:not(.ceo-depth-desk)';
+            document.querySelectorAll(targetSelector).forEach(desk=>{
               const r=desk.getBoundingClientRect();
               const over=e.clientX>=r.left&&e.clientX<=r.right&&e.clientY>=r.top&&e.clientY<=r.bottom;
               desk.classList.remove('employee-drop-target');
               if(over) targetDesk=desk;
             });
 
-            if(targetDesk){
+            if(targetDesk && employee.id!=='__ceo__'){
               const seat=nearestSeatOnDesk(employee.id,targetDesk.dataset.id,e.clientX,e.clientY);
               if(seat) assignSeatExplicit(employee.id,seat.key);
             }
@@ -936,11 +834,12 @@
 
       const previousState = el.dataset.visualState;
       el.dataset.visualState = vstate;
-      el.className = `sim-employee ${selected?'selected':''} sim-${vstate} ${placement.seated?'seat-seated':''} seat-facing-${placement.facing||'up'}`;
+      el.className = `sim-employee ${isCeo?'ceo-employee':''} ${selected?'selected':''} sim-${vstate} ${placement.seated?'seat-seated':''} seat-facing-${placement.facing||'up'}`;
       el.dataset.seated = placement.seated ? '1' : '0';
       el.dataset.facing = placement.facing || 'up';
-      const assignedSeat=seatAssignments[employee.id];
+      const assignedSeat=isCeo ? null : seatAssignments[employee.id];
       if(assignedSeat) el.dataset.seatKey=assignedSeat;
+      else delete el.dataset.seatKey;
       el.style.setProperty('--x', `${pos[0]}%`);
       el.style.setProperty('--y', `${pos[1]}%`);
       el.style.setProperty('--employee-depth', String(1000+Math.round(pos[1]*10)));
@@ -948,8 +847,8 @@
       const dot = el.querySelector('.status-dot-mini');
       dot.className = `status-dot-mini ${vstate}`;
       el.querySelector('.employee-status-bubble b').textContent = employee.name;
-      el.querySelector('.employee-status-bubble small').textContent = meta[0];
-      el.querySelector('.employee-task-caption').textContent = task?.task?.slice(0,30) || employee.role || '대기';
+      el.querySelector('.employee-status-bubble small').textContent = isCeo ? 'CEO' : meta[0];
+      el.querySelector('.employee-task-caption').textContent = isCeo ? '대표 자리' : (task?.task?.slice(0,30) || employee.role || '대기');
 
       const character = el.querySelector('.employee-character');
       const signature = `${employee.spriteStyle||'auto'}|${employee.department}|${employee.role}|${vstate}`;
@@ -1185,7 +1084,7 @@
     updateSelectedEmployeeStyles();
   });
   const version = document.querySelector('.sidebar-foot small');
-  if (version) version.textContent = 'v1.6.2 · CEO Tighter Nameplate';
+  if (version) version.textContent = 'v1.6.3 · CEO Rebuilt As Employee';
 
   try {
     renderOffice = renderCompanyOffice;
