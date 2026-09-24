@@ -929,3 +929,24 @@ body{overflow:hidden}.app-shell{height:100vh;min-height:0;overflow:hidden}main{h
   outline-offset:5px!important;
   filter:brightness(1.18) drop-shadow(0 0 14px #f0b84baa)!important;
 }
+
+/* v1.5.4 pointer event fix: CEO layer must not block employees */
+.game-office .sim-ceo{
+  pointer-events:none!important;
+}
+.game-office .sim-ceo .ceo-character-entity{
+  pointer-events:auto!important;
+}
+.game-office .sim-ceo .ceo-character-entity *{
+  pointer-events:none!important;
+}
+.game-office .sim-employees{
+  pointer-events:none!important;
+}
+.game-office .sim-employees .sim-employee{
+  pointer-events:auto!important;
+}
+.layout-editing .sim-ceo,
+.layout-editing .sim-ceo .ceo-character-entity{
+  pointer-events:none!important;
+}
