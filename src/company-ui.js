@@ -208,7 +208,12 @@
 
     const assignees=document.querySelector('#assigneeList');
     if(assignees){
-      assignees.innerHTML=state.employees.map(e=>`<label class="assignee"><input type="checkbox" value="${e.id}"><span>${e.avatar||'🧑‍💼'} ${escapeHtml(e.name)} · ${escapeHtml(e.role)}</span><span class="provider">${providerLabel[e.provider]||e.provider}</span></label>`).join('');
+      const checked = new Set([...assignees.querySelectorAll('input:checked')].map(x=>x.value));
+      const currentIds = [...assignees.querySelectorAll('input')].map(x=>x.value).join('|');
+      const nextIds = state.employees.map(e=>e.id).join('|');
+      if(currentIds !== nextIds){
+        assignees.innerHTML=state.employees.map(e=>`<label class="assignee"><input type="checkbox" value="${e.id}" ${checked.has(e.id)?'checked':''}><span>${e.avatar||'🧑‍💼'} ${escapeHtml(e.name)} · ${escapeHtml(e.role)}</span><span class="provider">${providerLabel[e.provider]||e.provider}</span></label>`).join('');
+      }
     }
     renderInspector();
     renderStats();
