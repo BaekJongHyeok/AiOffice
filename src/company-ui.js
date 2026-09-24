@@ -1092,7 +1092,7 @@
     updateSelectedEmployeeStyles();
   });
   const version = document.querySelector('.sidebar-foot small');
-  if (version) version.textContent = 'v1.7.5 · Report Routing';
+  if (version) version.textContent = 'v1.7.6 · Responsive Layout';
 
   try {
     renderOffice = renderCompanyOffice;
