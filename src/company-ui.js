@@ -692,7 +692,78 @@
         <div class="ceo-character-body">${pixelAvatar(ceo,'idle')}</div>
       </div>
     `;
+
+    const el=host.querySelector('.ceo-character-entity');
+    if(!el) return;
+
+    el.addEventListener('pointerdown',(event)=>{
+      if(companyUI.layoutEdit) return;
+      if(event.button!==undefined && event.button!==0) return;
+
+      const office=document.querySelector('.game-office');
+      if(!office) return;
+
+      const pointerId=event.pointerId;
+      const rect=office.getBoundingClientRect();
+      const startX=event.clientX,startY=event.clientY;
+      const startLeft=parseFloat(el.style.getPropertyValue('--x'))||x;
+      const startTop=parseFloat(el.style.getPropertyValue('--y'))||y;
+      let dragging=false;
+
+      const move=(e)=>{
+        if(e.pointerId!==pointerId) return;
+        const dist=Math.hypot(e.clientX-startX,e.clientY-startY);
+        if(!dragging && dist>=7){
+          dragging=true;
+          el.classList.add('ceo-dragging');
+          try{el.setPointerCapture(pointerId)}catch{}
+        }
+        if(!dragging) return;
+
+        e.preventDefault();
+        const dx=(e.clientX-startX)/rect.width*100;
+        const dy=(e.clientY-startY)/rect.height*100;
+        const nx=Math.max(3,Math.min(97,startLeft+dx));
+        const ny=Math.max(8,Math.min(82,startTop+dy));
+        el.style.setProperty('--x',nx+'%');
+        el.style.setProperty('--y',ny+'%');
+
+        document.querySelectorAll('.office-item.ceo-depth-desk').forEach(desk=>{
+          const r=desk.getBoundingClientRect();
+          const over=e.clientX>=r.left&&e.clientX<=r.right&&e.clientY>=r.top&&e.clientY<=r.bottom;
+          desk.classList.toggle('ceo-drop-target',over);
+        });
+      };
+
+      const up=(e)=>{
+        if(e.pointerId!==pointerId) return;
+        try{el.releasePointerCapture(pointerId)}catch{}
+        el.removeEventListener('pointermove',move);
+        el.removeEventListener('pointerup',up);
+        el.removeEventListener('pointercancel',up);
+
+        if(!dragging) return;
+        el.classList.remove('ceo-dragging');
+
+        let validDrop=false;
+        document.querySelectorAll('.office-item.ceo-depth-desk').forEach(desk=>{
+          const r=desk.getBoundingClientRect();
+          const over=e.clientX>=r.left&&e.clientX<=r.right&&e.clientY>=r.top&&e.clientY<=r.bottom;
+          desk.classList.remove('ceo-drop-target');
+          if(over) validDrop=true;
+        });
+
+        // CEO is bound to the executive desk. Valid drop snaps to its seat; invalid drop restores.
+        renderCeoCharacter();
+        if(validDrop) refreshEmployeeDestinations();
+      };
+
+      el.addEventListener('pointermove',move);
+      el.addEventListener('pointerup',up);
+      el.addEventListener('pointercancel',up);
+    });
   }
+
 
   function renderCompanyOffice() {
     if (!document.querySelector('#simEmployees')) buildCompanyShell();
@@ -1084,7 +1155,7 @@
     updateSelectedEmployeeStyles();
   });
   const version = document.querySelector('.sidebar-foot small');
-  if (version) version.textContent = 'v1.5.2 · CEO Desk Seat';
+  if (version) version.textContent = 'v1.5.3 · Draggable CEO';
 
   try {
     renderOffice = renderCompanyOffice;

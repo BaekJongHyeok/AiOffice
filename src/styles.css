@@ -913,3 +913,19 @@ body{overflow:hidden}.app-shell{height:100vh;min-height:0;overflow:hidden}main{h
 .layout-editing .ceo-depth-desk .furniture-front-image{
   z-index:2!important;
 }
+
+/* v1.5.3 draggable CEO */
+.game-office:not(.layout-editing) .sim-ceo{pointer-events:auto!important}
+.game-office:not(.layout-editing) .ceo-character-entity{pointer-events:auto!important;cursor:grab!important;touch-action:none!important}
+.game-office:not(.layout-editing) .ceo-character-entity:active,
+.game-office:not(.layout-editing) .ceo-character-entity.ceo-dragging{cursor:grabbing!important}
+.game-office:not(.layout-editing) .ceo-character-entity.ceo-dragging{
+  z-index:9500!important;
+  transition:none!important;
+  filter:drop-shadow(0 14px 14px #0009) brightness(1.08)!important;
+}
+.game-office:not(.layout-editing) .office-item.ceo-depth-desk.ceo-drop-target{
+  outline:4px solid #f0b84b!important;
+  outline-offset:5px!important;
+  filter:brightness(1.18) drop-shadow(0 0 14px #f0b84baa)!important;
+}
