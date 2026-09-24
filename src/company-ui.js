@@ -719,7 +719,7 @@
     updateSelectedEmployeeStyles();
   });
   const version = document.querySelector('.sidebar-foot small');
-  if (version) version.textContent = 'v1.2.1 · Seat Visual Fix';
+  if (version) version.textContent = 'v1.2.2 · Character Scale Fix';
 
   try {
     renderOffice = renderCompanyOffice;
