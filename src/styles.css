@@ -550,3 +550,18 @@ body{overflow:hidden}.app-shell{height:100vh;min-height:0;overflow:hidden}main{h
 .layout-help{grid-area:help;display:flex;flex-direction:column;gap:2px;min-width:190px;padding:2px 4px;color:#23314a}.layout-help b{font-size:10px}.layout-help span{font-size:8px;color:#64748b}
 .layout-add-group{grid-area:add;display:flex;gap:5px;flex-wrap:wrap}.layout-action-group{grid-area:actions;display:flex;gap:5px;align-items:center}
 .layout-action-group #layoutDeleteBtn{color:#c53b43;border-color:#e3b5b8;background:#fff7f7}
+
+/* v1.1.1 keep layout toolbar above furniture */
+.game-office .layout-editor-bar{
+  z-index:200!important;
+  pointer-events:auto!important;
+  isolation:isolate;
+}
+.game-office .layout-tools{
+  position:relative;
+  z-index:201!important;
+}
+.layout-editing .office-furniture{z-index:40!important}
+.layout-editing .layout-editor-bar{z-index:200!important}
+.layout-editing .layout-tools{z-index:201!important}
+.layout-editing .office-item.dragging{z-index:99!important}
