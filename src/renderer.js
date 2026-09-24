@@ -186,14 +186,14 @@ function renderSubscriptionCards(refresh=true){
 function openEmployeeModal(id=null){
   state.editingId=id; const e=state.employees.find(x=>x.id===id);
   $('#modalTitle').textContent=e?'직원 정보 수정':'새 직원 채용';$('#saveEmployee').textContent=e?'저장하기':'채용하기';
-  $('#empName').value=e?.name||'';$('#empRank').value=e?.rank||'사원';$('#empDept').value=e?.department||'';$('#empProvider').value=e?.provider||'chatgpt';$('#empRole').value=e?.role||'';$('#empTraits').value=e?.traits||'';
+  $('#empName').value=e?.name||'';$('#empRank').value=e?.rank||'사원';$('#empDept').value=e?.department||'';$('#empProvider').value=e?.provider||'chatgpt';if($('#empSprite')) $('#empSprite').value=e?.spriteStyle||'auto';$('#empRole').value=e?.role||'';$('#empTraits').value=e?.traits||'';
   $('#employeeModal').classList.remove('hidden');
 }
 function closeEmployeeModal(){ $('#employeeModal').classList.add('hidden'); state.editingId=null; }
 
 function saveEmployee(){
   const name=$('#empName').value.trim(); if(!name){alert('직원 이름을 입력하세요.');return}
-  const data={name,rank:$('#empRank').value,department:$('#empDept').value.trim()||'미지정',provider:$('#empProvider').value,role:$('#empRole').value.trim()||'일반 업무',traits:$('#empTraits').value.trim(),avatar:['🧑‍💼','👩‍💼','👨‍💼'][state.employees.length%3]};
+  const data={name,rank:$('#empRank').value,department:$('#empDept').value.trim()||'미지정',provider:$('#empProvider').value,spriteStyle:$('#empSprite')?.value||'auto',role:$('#empRole').value.trim()||'일반 업무',traits:$('#empTraits').value.trim(),avatar:['🧑‍💼','👩‍💼','👨‍💼'][state.employees.length%3]};
   if(state.editingId){const i=state.employees.findIndex(e=>e.id===state.editingId);state.employees[i]={...state.employees[i],...data}}else state.employees.push({id:uid(),...data});
   persist();closeEmployeeModal();renderAll();
 }
