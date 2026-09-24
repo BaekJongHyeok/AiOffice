@@ -1158,3 +1158,32 @@ body{overflow:hidden}.app-shell{height:100vh;min-height:0;overflow:hidden}main{h
 .game-office .ceo-employee .employee-task-caption{
   display:none!important;
 }
+
+/* v1.7.2 root modal interaction fix */
+body > .modal{
+  z-index:100000!important;
+  pointer-events:auto!important;
+  isolation:isolate!important;
+}
+body > .modal.hidden{
+  display:none!important;
+}
+body > .modal .modal-card{
+  position:relative!important;
+  z-index:100001!important;
+  pointer-events:auto!important;
+}
+body > .modal .modal-card *,
+body > .modal button,
+body > .modal input,
+body > .modal select,
+body > .modal textarea,
+body > .modal label{
+  pointer-events:auto!important;
+}
+#employeeModal{
+  z-index:110000!important;
+}
+#employeeModal .modal-card{
+  z-index:110001!important;
+}
