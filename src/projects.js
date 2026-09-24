@@ -138,7 +138,7 @@
 
     const project = {
       id: uid(), name, objective, managerId, memberIds, autoRun,
-      status: 'working', createdAt: Date.now(), taskIds: [], finalTaskId: null
+      status: 'working', createdAt: Date.now(), taskIds: [], finalTaskId: null, finalReportId: null
     };
 
     for (const employeeId of memberIds) {
@@ -216,11 +216,13 @@
 
     if (manager.provider === 'demo') {
       task.finishedAt = Date.now();
-      state.reports.unshift({
+      const finalReport = {
         id:uid(), employeeId:manager.id, employeeName:manager.name, department:manager.department,
         provider:manager.provider, task:task.task, taskId:task.id, projectId:project.id,
-        result:'[DEMO] 팀장 최종 취합 보고가 완료되었습니다.', createdAt:Date.now()
-      });
+        result:'[DEMO] 팀장 최종 취합 보고가 완료되었습니다.', createdAt:Date.now(), finalProjectReport:true
+      };
+      state.reports.unshift(finalReport);
+      project.finalReportId = finalReport.id;
       project.status = 'done';
       project.finishedAt = Date.now();
     }
@@ -232,18 +234,54 @@
   }
 
   function syncProjectStatus(project) {
+    if (!project) return;
+
     if (project.finalTaskId) {
       const finalTask = state.tasks.find(t => t.id === project.finalTaskId);
-      if (finalTask?.status === 'done') {
+      const finalReport = state.reports.find(r => r.taskId === project.finalTaskId && r.projectId === project.id);
+
+      if (finalTask?.status === 'done' && finalReport) {
+        finalReport.finalProjectReport = true;
+        project.finalReportId = finalReport.id;
         project.status = 'done';
         project.finishedAt = project.finishedAt || Date.now();
-      } else if (finalTask) {
+        return;
+      }
+
+      if (finalTask) {
         project.status = 'review';
+        return;
+      }
+
+      project.finalTaskId = null;
+    }
+
+    maybeCreateManagerTask(project);
+  }
+
+  function processCompletedTask(taskId) {
+    const task = state.tasks.find(t => t.id === taskId);
+    if (!task?.projectId) return;
+
+    const project = state.projects.find(p => p.id === task.projectId);
+    if (!project) return;
+
+    if (task.taskType === 'project-final') {
+      const report = state.reports.find(r => r.taskId === task.id && r.projectId === project.id);
+      if (report) {
+        report.finalProjectReport = true;
+        project.finalReportId = report.id;
+        project.status = 'done';
+        project.finishedAt = Date.now();
       }
     } else {
-      maybeCreateManagerTask(project);
+      syncProjectStatus(project);
     }
+
+    persist();
+    renderProjects();
   }
+
 
   function renderProjects() {
     state.projects.forEach(syncProjectStatus);
@@ -262,6 +300,7 @@
       const done = work.filter(t => t.status === 'done').length;
       const finalTask = p.finalTaskId ? state.tasks.find(t => t.id === p.finalTaskId) : null;
       const statusLabel = p.status === 'done' ? '✅ 완료' : p.status === 'review' ? '🧑‍💼 팀장 취합' : p.status === 'blocked' ? '⚠ 차단' : '⚡ 진행중';
+      const finalReport = p.finalReportId ? state.reports.find(r => r.id === p.finalReportId) : null;
 
       return `
         <article class="project-card">
@@ -275,8 +314,10 @@
             ${work.map(t => `<div><span>${t.status==='done'?'✅':t.status==='working'?'⚡':'○'}</span> ${escapeHtml(t.employeeName)} · ${escapeHtml(t.task)}</div>`).join('')}
             ${finalTask ? `<div class="manager-task"><span>${finalTask.status==='done'?'✅':'🧑‍💼'}</span> ${escapeHtml(finalTask.employeeName)} · 최종 취합</div>` : ''}
           </div>
+          ${finalReport ? `<div class="project-final-report"><b>📨 최종 보고서</b><p>${escapeHtml(finalReport.result.slice(0,220))}${finalReport.result.length>220?'…':''}</p></div>` : ''}
           <div class="card-actions">
             <button class="btn ghost open-project-tasks" data-id="${p.id}">관련 업무 보기</button>
+            ${finalReport ? `<button class="btn primary open-final-report" data-id="${p.id}">최종 보고 보기</button>` : `<button class="btn ghost retry-final-report" data-id="${p.id}">팀장 최종보고 확인</button>`}
             <button class="btn ghost delete-project" data-id="${p.id}">프로젝트 삭제</button>
           </div>
         </article>
@@ -290,6 +331,33 @@
         const t = state.tasks.find(x => x.id === el.dataset.taskId);
         el.style.display = t?.projectId === id ? '' : 'none';
       });
+    });
+
+    wrap.querySelectorAll('.open-final-report').forEach(b => b.onclick = () => {
+      const p = state.projects.find(x => x.id === b.dataset.id);
+      const report = p?.finalReportId ? state.reports.find(r => r.id === p.finalReportId) : null;
+      if (!report) return alert('최종 보고서를 찾지 못했습니다.');
+      document.querySelector('.nav[data-view="reports"]')?.click();
+      setTimeout(() => {
+        const reportEls = [...document.querySelectorAll('.report-full')];
+        const target = reportEls.find(el => el.textContent.includes(report.employeeName) && el.textContent.includes(report.task));
+        target?.scrollIntoView({ behavior:'smooth', block:'center' });
+      }, 50);
+    });
+
+    wrap.querySelectorAll('.retry-final-report').forEach(b => b.onclick = () => {
+      const p = state.projects.find(x => x.id === b.dataset.id);
+      if (!p) return;
+      syncProjectStatus(p);
+      persist();
+      renderProjects();
+
+      if (p.finalTaskId) {
+        const t = state.tasks.find(x => x.id === p.finalTaskId);
+        if (t?.status === 'queued' || t?.status === 'opened') {
+          window.dispatchEvent(new CustomEvent('ai-office-enqueue-task', { detail:{ id:t.id } }));
+        }
+      }
     });
 
     wrap.querySelectorAll('.delete-project').forEach(b => b.onclick = () => deleteProject(b.dataset.id));
@@ -420,10 +488,15 @@
   });
   observer.observe(document.body, { childList:true, subtree:true });
 
+  window.addEventListener('ai-office-task-completed', (event) => {
+    const taskId = event?.detail?.taskId;
+    if (taskId) processCompletedTask(taskId);
+  });
+
   ensureTaskManager();
   ensureTaskButtons();
   const version = document.querySelector('.sidebar-foot small');
-  if (version) version.textContent = 'v0.4.0 · Project Manager';
+  if (version) version.textContent = 'v0.4.1 · Final Report Fix';
 
   renderProjects();
 })();
