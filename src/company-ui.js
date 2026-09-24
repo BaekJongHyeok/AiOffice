@@ -9,6 +9,7 @@
     openReportId: null,
     layoutEdit: false,
     selectedFurnitureId: null,
+    seatAssignEmployeeId: null,
   };
 
   const furnitureCatalog = {
@@ -49,7 +50,26 @@
     }catch{return {}}
   };
   let seatAssignments=loadSeatAssignments();
-  const saveSeatAssignments=()=>localStorage.setItem('aiOfficeSeatAssignmentsV1',JSON.stringify(seatAssignments));
+  const saveSeatAssignments=()=>localStorage.setItem('aiOfficeSeatAssignmentsV2',JSON.stringify(seatAssignments));
+
+  const seatOwnerByKey=(seatKey)=>{
+    const entry=Object.entries(seatAssignments).find(([,key])=>key===seatKey);
+    return entry ? entry[0] : null;
+  };
+
+  const assignSeatExplicit=(employeeId,seatKey)=>{
+    const employee=state.employees.find(e=>e.id===employeeId);
+    if(!employee) return false;
+    const seat=allWorkSeats().find(s=>s.key===seatKey);
+    if(!seat) return false;
+    const otherOwner=seatOwnerByKey(seatKey);
+    if(otherOwner && otherOwner!==employeeId) delete seatAssignments[otherOwner];
+    seatAssignments[employeeId]=seatKey;
+    saveSeatAssignments();
+    reconcileSeatAssignments();
+    refreshEmployeeDestinations();
+    return true;
+  };
 
   const refreshEmployeeDestinations=()=>{
     if(document.querySelector('#simEmployees')) {
@@ -152,6 +172,10 @@
             <button id="layoutEditBtn" class="layout-edit-btn">✥ 배치 편집</button>
             <div id="layoutTools" class="layout-tools">
               <div class="layout-help"><b>배치 편집</b><span id="selectedFurnitureLabel">가구를 클릭해서 선택하고 드래그하세요.</span></div>
+              <div class="seat-assign-panel">
+                <select id="seatAssignEmployeeSelect"><option value="">직원 자리 지정...</option></select>
+                <button id="seatAssignCancelBtn" type="button">자리 지정 취소</button>
+              </div>
               <div class="layout-add-group">
                 <button data-add="desk-1p">+ 1인 책상</button><button data-add="desk-2p">+ 2인 책상</button><button data-add="workstation-4p">+ 4인 책상</button><button data-add="meeting-table">+ 회의 테이블</button><button data-add="bookshelf">+ 책장</button><button data-add="server-rack">+ 서버랙</button><button data-add="office-corner">+ 정수기</button><button data-add="plant-large">+ 화분</button>
               </div>
@@ -205,6 +229,29 @@
 
     renderFurniture();
     const editBtn=document.querySelector('#layoutEditBtn'), tools=document.querySelector('#layoutTools'), office=document.querySelector('.game-office');
+    const seatSelect=document.querySelector('#seatAssignEmployeeSelect');
+    const seatCancel=document.querySelector('#seatAssignCancelBtn');
+    const refreshSeatAssignUi=()=>{
+      if(seatSelect){
+        const current=seatSelect.value;
+        seatSelect.innerHTML='<option value="">직원 자리 지정...</option>'+state.employees.map(e=>`<option value="${e.id}">${escapeHtml(e.name)} · ${escapeHtml(e.role||'직원')}</option>`).join('');
+        seatSelect.value=companyUI.seatAssignEmployeeId||current||'';
+      }
+      office?.classList.toggle('seat-assigning',!!companyUI.seatAssignEmployeeId);
+    };
+    seatSelect?.addEventListener('change',()=>{
+      companyUI.seatAssignEmployeeId=seatSelect.value||null;
+      companyUI.selectedFurnitureId=null;
+      renderFurniture();
+      refreshSeatAssignUi();
+    });
+    seatCancel?.addEventListener('click',(ev)=>{
+      ev.stopPropagation();
+      companyUI.seatAssignEmployeeId=null;
+      if(seatSelect) seatSelect.value='';
+      renderFurniture();
+      refreshSeatAssignUi();
+    });
     const refreshSelectedFurnitureLabel=()=>{
       const label=document.querySelector('#selectedFurnitureLabel');
       const selected=furniture.find(x=>x.id===companyUI.selectedFurnitureId);
@@ -217,10 +264,12 @@
       if(editBtn) editBtn.style.display='none';
       renderFurniture();
       refreshSelectedFurnitureLabel();
+      refreshSeatAssignUi();
     };
     const leaveLayoutEdit=()=>{
       companyUI.layoutEdit=false;
       companyUI.selectedFurnitureId=null;
+      companyUI.seatAssignEmployeeId=null;
       office?.classList.remove('layout-editing');
       tools?.classList.remove('show');
       if(editBtn) editBtn.style.display='';
@@ -274,9 +323,17 @@
     host.innerHTML=furniture.map(item=>{
       const preset=furnitureCatalog[item.type]||item;
       const isDesk=['desk-1p','desk-2p','workstation-4p'].includes(item.type);
+      const pins=isDesk ? deskSeatPoints(item).map((seat,seatIndex)=>{
+        const key=`${item.id}:${seatIndex}`;
+        const ownerId=seatOwnerByKey(key);
+        const owner=state.employees.find(e=>e.id===ownerId);
+        const selectedFor=companyUI.seatAssignEmployeeId && seatAssignments[companyUI.seatAssignEmployeeId]===key;
+        return `<span class="seat-pin ${ownerId?'occupied':''} ${selectedFor?'assigned':''}" data-seat-key="${key}" style="left:${((seat.point[0]-item.x)/item.w)*100}%;top:${((seat.point[1]-item.y)/item.h)*100}%"><i>${owner?escapeHtml(owner.name.slice(0,1)):'+'}</i></span>`;
+      }).join('') : '';
       return `<button type="button" class="office-item pixel-furniture ${isDesk?'depth-desk':''} ${companyUI.selectedFurnitureId===item.id?'selected':''}" data-id="${item.id}" aria-label="${preset.label||item.type}" style="left:${item.x}%;top:${item.y}%;width:${item.w}%;height:${item.h}%">
         <img class="furniture-sprite real-furniture-image furniture-base-image" src="assets/furniture/${item.type}.png" alt="" draggable="false">
         ${isDesk ? '<img class="furniture-sprite real-furniture-image furniture-front-image" src="assets/furniture/'+item.type+'.png" alt="" draggable="false">' : ''}
+        ${pins}
         <em>${preset.label||item.label||item.type}</em>
       </button>`;
     }).join('');
@@ -287,10 +344,26 @@
       if(label) label.textContent=selected ? `${furnitureCatalog[selected.type]?.label||selected.type} 선택됨 · 드래그해서 이동` : '가구를 클릭해서 선택하고 드래그하세요.';
     };
 
+    host.querySelectorAll('.seat-pin').forEach(pin=>{
+      pin.addEventListener('pointerdown',(ev)=>{ev.preventDefault();ev.stopPropagation();});
+      pin.addEventListener('click',(ev)=>{
+        ev.preventDefault(); ev.stopPropagation();
+        if(!companyUI.layoutEdit || !companyUI.seatAssignEmployeeId) return;
+        if(assignSeatExplicit(companyUI.seatAssignEmployeeId,pin.dataset.seatKey)){
+          companyUI.seatAssignEmployeeId=null;
+          const select=document.querySelector('#seatAssignEmployeeSelect');
+          if(select) select.value='';
+          renderFurniture();
+          document.querySelector('.game-office')?.classList.remove('seat-assigning');
+        }
+      });
+    });
+
     host.querySelectorAll('.office-item').forEach(el=>{
       el.addEventListener('click',(ev)=>{
         if(!companyUI.layoutEdit)return;
         ev.preventDefault(); ev.stopPropagation();
+        if(companyUI.seatAssignEmployeeId) return;
         companyUI.selectedFurnitureId=el.dataset.id;
         host.querySelectorAll('.office-item').forEach(x=>x.classList.toggle('selected',x===el));
         updateLabel();
@@ -299,6 +372,7 @@
       el.addEventListener('pointerdown',(ev)=>{
         if(!companyUI.layoutEdit)return;
         ev.preventDefault(); ev.stopPropagation();
+        if(companyUI.seatAssignEmployeeId) return;
         const item=furniture.find(x=>x.id===el.dataset.id); if(!item)return;
         companyUI.selectedFurnitureId=item.id;
         host.querySelectorAll('.office-item').forEach(x=>x.classList.toggle('selected',x===el));
@@ -813,7 +887,7 @@
     updateSelectedEmployeeStyles();
   });
   const version = document.querySelector('.sidebar-foot small');
-  if (version) version.textContent = 'v1.3.4 · Activity Safe Zone';
+  if (version) version.textContent = 'v1.4.0 · Assigned Desk System';
 
   try {
     renderOffice = renderCompanyOffice;
