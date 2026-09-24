@@ -284,12 +284,21 @@ function switchView(name){
 function escapeHtml(s=''){return String(s).replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]))}
 
 $('#empProvider')?.addEventListener('change',()=>syncEmployeeModelOptions('auto'));
-$('.nav').forEach(n=>n.onclick=()=>switchView(n.dataset.view));
-$('#newEmployeeTop').onclick=()=>openEmployeeModal();$('#newEmployeeBtn').onclick=()=>openEmployeeModal();$('#closeModal').onclick=closeEmployeeModal;$('#cancelEmployee').onclick=closeEmployeeModal;$('#saveEmployee').onclick=saveEmployee;
-$('#selectAllBtn').onclick=()=>{$$('#assigneeList input').forEach(x=>x.checked=true)};$('#runTaskBtn').onclick=runTasks;$('#goReports').onclick=()=>switchView('reports');
-$('#clearReports').onclick=()=>{if(confirm('보고함을 비울까요?')){state.reports=[];persist();renderAll()}};
-$('#employeeModal').onclick=(e)=>{if(e.target.id==='employeeModal')closeEmployeeModal()};
-$('#closeResultModal').onclick=closeResultModal;$('#cancelResult').onclick=closeResultModal;$('#saveResult').onclick=saveResult;$('#resultModal').onclick=(e)=>{if(e.target.id==='resultModal')closeResultModal()};
+$$('.nav').forEach(n=>n.onclick=()=>switchView(n.dataset.view));
+$('#newEmployeeTop')?.addEventListener('click',()=>openEmployeeModal());
+$('#newEmployeeBtn')?.addEventListener('click',()=>openEmployeeModal());
+$('#closeModal')?.addEventListener('click',closeEmployeeModal);
+$('#cancelEmployee')?.addEventListener('click',closeEmployeeModal);
+$('#saveEmployee')?.addEventListener('click',saveEmployee);
+$('#selectAllBtn')?.addEventListener('click',()=>{$('#assigneeList input').forEach(x=>x.checked=true)});
+$('#runTaskBtn')?.addEventListener('click',runTasks);
+$('#goReports')?.addEventListener('click',()=>switchView('reports'));
+$('#clearReports')?.addEventListener('click',()=>{if(confirm('보고함을 비울까요?')){state.reports=[];persist();renderAll()}});
+$('#employeeModal')?.addEventListener('click',(e)=>{if(e.target.id==='employeeModal')closeEmployeeModal()});
+$('#closeResultModal')?.addEventListener('click',closeResultModal);
+$('#cancelResult')?.addEventListener('click',closeResultModal);
+$('#saveResult')?.addEventListener('click',saveResult);
+$('#resultModal')?.addEventListener('click',(e)=>{if(e.target.id==='resultModal')closeResultModal()});
 persist();renderAll();
 
 
