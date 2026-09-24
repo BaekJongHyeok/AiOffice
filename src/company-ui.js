@@ -5,6 +5,8 @@
   const companyUI = {
     selectedEmployeeId: null,
     tick: null,
+    dialogSignature: '',
+    openReportId: null,
   };
 
   const rolePalette = (employee) => {
@@ -222,6 +224,8 @@
         el.onclick = (event) => {
           event.stopPropagation();
           companyUI.selectedEmployeeId = companyUI.selectedEmployeeId === el.dataset.id ? null : el.dataset.id;
+          companyUI.openReportId = null;
+          companyUI.dialogSignature = '';
           renderEmployeeDialog();
           updateSelectedEmployeeStyles();
         };
@@ -306,13 +310,20 @@
     const host=document.querySelector('#employeeDialogHost');
     if(!host) return;
     const e=state.employees.find(x=>x.id===companyUI.selectedEmployeeId);
-    if(!e){ host.innerHTML=''; return; }
+
+    if(!e){
+      if(host.innerHTML) host.innerHTML='';
+      companyUI.dialogSignature='';
+      companyUI.openReportId=null;
+      return;
+    }
 
     const anchor=document.querySelector(`.sim-employee[data-id="${e.id}"]`);
-    if(!anchor){ host.innerHTML=''; return; }
+    if(!anchor) return;
 
     const task=activeTask(e.id);
-    const recent=state.reports.find(r=>r.employeeId===e.id);
+    const reports=state.reports.filter(r=>r.employeeId===e.id).slice(0,6);
+    const openReport=reports.find(r=>r.id===companyUI.openReportId) || null;
     const vstate=employeeVisualState(e);
     const meta=statusMeta[vstate]||statusMeta.idle;
     const progress = task ? (task.status==='working'?65:task.status==='queued'?15:task.status==='opened'?40:100) : 0;
@@ -326,6 +337,43 @@
     const placeLeft=anchorCenterX > officeRect.width*0.62;
     const top=Math.max(12,Math.min(officeRect.height-430,anchorCenterY-165));
     const left=placeLeft ? Math.max(12,anchorCenterX-390) : Math.min(officeRect.width-372,anchorCenterX+82);
+
+    const signature = [
+      e.id,e.name,e.rank,e.department,e.provider,e.role,e.traits,e.spriteStyle,
+      vstate,task?.id,task?.status,task?.automationError,project?.name,
+      reports.map(r=>`${r.id}:${r.task}:${r.createdAt}`).join('|'),
+      companyUI.openReportId || ''
+    ].join('::');
+
+    const existing=host.querySelector('.employee-popover');
+    if(existing && companyUI.dialogSignature===signature){
+      existing.style.left=`${left}px`;
+      existing.style.top=`${top}px`;
+      existing.classList.toggle('popover-left',placeLeft);
+      existing.classList.toggle('popover-right',!placeLeft);
+      return;
+    }
+
+    companyUI.dialogSignature=signature;
+
+    const reportList = reports.length
+      ? `<div class="recent-report-titles">${reports.map(r=>`
+          <button class="recent-report-title ${companyUI.openReportId===r.id?'active':''}" data-report-id="${r.id}">
+            <span>📄 ${escapeHtml(r.task)}</span>
+            <small>${new Date(r.createdAt).toLocaleDateString()}</small>
+          </button>
+        `).join('')}</div>`
+      : '<div class="no-current-task">아직 보고 기록이 없습니다.</div>';
+
+    const reportDetail = openReport
+      ? `<div class="recent-report-detail">
+          <div class="recent-report-detail-head">
+            <b>${escapeHtml(openReport.task)}</b>
+            <button class="close-report-detail">접기</button>
+          </div>
+          <pre>${escapeHtml(String(openReport.result||''))}</pre>
+        </div>`
+      : '';
 
     host.innerHTML=`
       <div class="employee-popover ${placeLeft?'popover-left':'popover-right'}" style="left:${left}px;top:${top}px">
@@ -360,8 +408,9 @@
         </div>
 
         <div class="popover-section">
-          <div class="section-title"><h3>최근 보고</h3></div>
-          ${recent?`<div class="recent-report-mini"><b>${escapeHtml(recent.task)}</b><p>${escapeHtml(String(recent.result||'').slice(0,150))}${String(recent.result||'').length>150?'…':''}</p></div>`:'<div class="no-current-task">아직 보고 기록이 없습니다.</div>'}
+          <div class="section-title"><h3>최근 보고</h3><span class="report-count">${reports.length}건</span></div>
+          ${reportList}
+          ${reportDetail}
         </div>
 
         <div class="popover-actions">
@@ -374,9 +423,28 @@
     host.querySelector('.employee-popover-close')?.addEventListener('click',(event)=>{
       event.stopPropagation();
       companyUI.selectedEmployeeId=null;
+      companyUI.openReportId=null;
+      companyUI.dialogSignature='';
       renderEmployeeDialog();
       updateSelectedEmployeeStyles();
     });
+
+    host.querySelectorAll('.recent-report-title').forEach(btn=>{
+      btn.addEventListener('click',(event)=>{
+        event.stopPropagation();
+        companyUI.openReportId = companyUI.openReportId===btn.dataset.reportId ? null : btn.dataset.reportId;
+        companyUI.dialogSignature='';
+        renderEmployeeDialog();
+      });
+    });
+
+    host.querySelector('.close-report-detail')?.addEventListener('click',(event)=>{
+      event.stopPropagation();
+      companyUI.openReportId=null;
+      companyUI.dialogSignature='';
+      renderEmployeeDialog();
+    });
+
     host.querySelector('.inspector-edit')?.addEventListener('click',(event)=>{event.stopPropagation();openEmployeeModal(e.id)});
     host.querySelector('.inspector-employee')?.addEventListener('click',(event)=>{event.stopPropagation();switchView('employees')});
     host.querySelector('.inspector-task')?.addEventListener('click',(event)=>{
@@ -396,11 +464,13 @@
   document.querySelector('.sim-office')?.addEventListener('click', (event) => {
     if (event.target.closest('.sim-employee') || event.target.closest('.employee-popover')) return;
     companyUI.selectedEmployeeId = null;
+    companyUI.openReportId = null;
+    companyUI.dialogSignature = '';
     renderEmployeeDialog();
     updateSelectedEmployeeStyles();
   });
   const version = document.querySelector('.sidebar-foot small');
-  if (version) version.textContent = 'v0.5.2 · Employee Dialog';
+  if (version) version.textContent = 'v0.5.3 · Stable Dialog';
 
   try {
     renderOffice = renderCompanyOffice;
