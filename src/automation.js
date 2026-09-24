@@ -1,88 +1,96 @@
-const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+(() => {
+  const queues = { chatgpt: Promise.resolve(), claude: Promise.resolve(), gemini: Promise.resolve() };
+  const queuedIds = new Set();
 
-function buildInjectionScript(prompt) {
-  const p = JSON.stringify(prompt);
-  return [
-    '(() => {',
-    'const prompt=' + p + ';',
-    'const visible=(el)=>!!(el&&el.getClientRects().length&&!el.disabled);',
-    'const list=[',
-    'document.querySelector("#prompt-textarea"),',
-    'document.querySelector("textarea[placeholder*=Message]"),',
-    'document.querySelector("textarea[placeholder*=메시지]"),',
-    'document.querySelector("textarea"),',
-    '...document.querySelectorAll("[contenteditable=true]")',
-    '].filter(visible);',
-    'const input=list[list.length-1];',
-    'if(!input)return {ok:false,stage:"input",error:"입력창을 찾지 못했습니다."};',
-    'input.focus();',
-    'if(input.tagName==="TEXTAREA"||input.tagName==="INPUT"){',
-    'const setter=Object.getOwnPropertyDescriptor(Object.getPrototypeOf(input),"value")?.set;',
-    'if(setter)setter.call(input,prompt);else input.value=prompt;',
-    'input.dispatchEvent(new Event("input",{bubbles:true}));',
-    'input.dispatchEvent(new Event("change",{bubbles:true}));',
-    '}else{',
-    'input.textContent=prompt;',
-    'input.dispatchEvent(new InputEvent("input",{bubbles:true,inputType:"insertText",data:prompt}));',
-    '}',
-    'const buttons=[...document.querySelectorAll("button")].filter(visible);',
-    'const send=buttons.find((b)=>{const a=((b.getAttribute("aria-label")||"")+" "+(b.getAttribute("data-testid")||"")+" "+(b.title||"")).toLowerCase();return /send|submit|보내|전송/.test(a);});',
-    'if(send){send.click();return {ok:true,stage:"submitted",method:"button"};}',
-    'return {ok:true,stage:"needs-enter",method:"keyboard"};',
-    '})()'
-  ].join('');
-}
+  function ensureControls() {
+    const commandRow = document.querySelector('.command-row');
+    if (commandRow && !document.querySelector('#autoRunToggle')) {
+      const label = document.createElement('label');
+      label.className = 'auto-toggle';
+      label.innerHTML = '<input id="autoRunToggle" type="checkbox" checked><span>⚡ 배정 즉시 자동 실행 (실험 기능)</span>';
+      commandRow.parentElement.insertBefore(label, commandRow);
+    }
 
-function buildExtractionScript() {
-  return [
-    '(() => {',
-    'const selectors=["[data-message-author-role=assistant]","[data-testid*=assistant]","main article","main .markdown","main [class*=response]"];',
-    'let nodes=[];',
-    'for(const s of selectors){const found=[...document.querySelectorAll(s)].filter((el)=>el.innerText&&el.innerText.trim().length>20);if(found.length)nodes=found;}',
-    'const el=nodes[nodes.length-1];',
-    'return el?el.innerText.trim():"";',
-    '})()'
-  ].join('');
-}
+    document.querySelectorAll('.open-ai, .board-open').forEach((button) => {
+      const parent = button.parentElement;
+      if (!parent || parent.querySelector('.subscription-auto-btn')) return;
+      const auto = document.createElement('button');
+      auto.className = 'text-btn subscription-auto-btn';
+      auto.textContent = '⚡ 자동 실행';
+      auto.dataset.id = button.dataset.id;
+      auto.onclick = () => enqueue(auto.dataset.id);
+      parent.insertBefore(auto, button);
+    });
 
-async function automateSubscription(win, provider, prompt) {
-  await sleep(1200);
-  let submit;
-  try {
-    submit = await win.webContents.executeJavaScript(buildInjectionScript(prompt), true);
-  } catch (error) {
-    return { ok:false, stage:'inject', error:error.message };
-  }
-
-  if (!submit?.ok) return submit || { ok:false, error:'자동 입력에 실패했습니다.' };
-
-  if (submit.stage === 'needs-enter') {
-    win.webContents.sendInputEvent({ type:'keyDown', keyCode:'ENTER' });
-    win.webContents.sendInputEvent({ type:'keyUp', keyCode:'ENTER' });
-  }
-
-  let last = '';
-  let stable = 0;
-  for (let i = 0; i < 90; i++) {
-    await sleep(2000);
-    if (win.isDestroyed()) return { ok:false, stage:'closed', error:'AI 창이 닫혔습니다.' };
-    let text = '';
-    try {
-      text = await win.webContents.executeJavaScript(buildExtractionScript(), true);
-    } catch {}
-    if (text && text.length > 20) {
-      if (text === last) stable += 1;
-      else { last = text; stable = 0; }
-      if (stable >= 2) return { ok:true, result:text, provider, automated:true };
+    if (!document.querySelector('#subscriptionAutomationStyle')) {
+      const style = document.createElement('style');
+      style.id = 'subscriptionAutomationStyle';
+      style.textContent = '.auto-toggle{display:flex;align-items:center;gap:10px;margin:12px 0;padding:10px 12px;border:1px solid rgba(255,255,255,.1);border-radius:10px;background:rgba(255,255,255,.03);font-size:13px}.auto-toggle input{width:16px;height:16px}.subscription-auto-btn{color:#ffd66b!important}';
+      document.head.appendChild(style);
     }
   }
 
-  return {
-    ok:false,
-    stage:'timeout',
-    error:'답변 자동 회수 시간이 초과되었습니다. 수동 결과 입력을 사용하세요.',
-    partial:last || ''
-  };
-}
+  async function execute(id) {
+    const task = state.tasks.find(t => t.id === id);
+    if (!task || task.status === 'done' || task.provider === 'demo') return;
 
-module.exports = { automateSubscription };
+    task.status = 'working';
+    task.automationStartedAt = Date.now();
+    persist();
+    renderAll();
+    ensureControls();
+
+    const result = await window.aiOffice.automateSubscription(task.provider, task.prompt || '');
+    if (result?.ok && result.result) {
+      task.status = 'done';
+      task.finishedAt = Date.now();
+      task.automated = true;
+      state.reports.unshift({
+        id: uid(),
+        employeeId: task.employeeId,
+        employeeName: task.employeeName,
+        department: task.department,
+        provider: task.provider,
+        task: task.task,
+        result: result.result,
+        createdAt: Date.now(),
+        automated: true,
+      });
+    } else {
+      task.status = 'opened';
+      task.automationError = result?.error || '자동 실행에 실패했습니다.';
+      task.partialResult = result?.partial || '';
+    }
+    persist();
+    renderAll();
+    ensureControls();
+  }
+
+  function enqueue(id) {
+    const task = state.tasks.find(t => t.id === id);
+    if (!task || task.status === 'done' || task.provider === 'demo' || queuedIds.has(id)) return;
+    queuedIds.add(id);
+    const provider = task.provider;
+    const run = async () => {
+      try { await execute(id); } finally { queuedIds.delete(id); }
+    };
+    queues[provider] = (queues[provider] || Promise.resolve()).then(run, run);
+  }
+
+  document.querySelector('#runTaskBtn')?.addEventListener('click', () => {
+    setTimeout(() => {
+      ensureControls();
+      if (!document.querySelector('#autoRunToggle')?.checked) return;
+      state.tasks
+        .filter(t => t.status === 'queued' && t.provider !== 'demo')
+        .forEach(t => enqueue(t.id));
+    }, 80);
+  });
+
+  const observer = new MutationObserver(() => ensureControls());
+  observer.observe(document.body, { childList: true, subtree: true });
+  ensureControls();
+
+  const version = document.querySelector('.sidebar-foot small');
+  if (version) version.textContent = 'v0.3.0 · Subscription Automation';
+})();
