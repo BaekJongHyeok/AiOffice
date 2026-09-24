@@ -646,7 +646,7 @@
     updateSelectedEmployeeStyles();
   });
   const version = document.querySelector('.sidebar-foot small');
-  if (version) version.textContent = 'v1.1.0 · Interactive Layout';
+  if (version) version.textContent = 'v1.1.1 · Toolbar Layer Fix';
 
   try {
     renderOffice = renderCompanyOffice;
