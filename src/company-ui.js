@@ -1185,7 +1185,7 @@
     updateSelectedEmployeeStyles();
   });
   const version = document.querySelector('.sidebar-foot small');
-  if (version) version.textContent = 'v1.5.6 · Unified Character Layer';
+  if (version) version.textContent = 'v1.5.7 · Nameplate Spacing';
 
   try {
     renderOffice = renderCompanyOffice;
