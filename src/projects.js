@@ -370,6 +370,7 @@
           <div class="card-actions">
             <button class="btn ghost open-project-tasks" data-id="${p.id}">관련 업무 보기</button>
             ${finalReport ? `<button class="btn primary open-final-report" data-id="${p.id}">최종 보고 보기</button>` : `<button class="btn ghost retry-final-report" data-id="${p.id}">팀장 최종보고 확인</button>`}
+            ${p.qualityError ? `<button class="btn primary retry-bad-reports" data-id="${p.id}">문제 업무 재실행</button>` : ''}
             <button class="btn ghost delete-project" data-id="${p.id}">프로젝트 삭제</button>
           </div>
         </article>
@@ -409,6 +410,41 @@
         if (t?.status === 'queued' || t?.status === 'opened') {
           window.dispatchEvent(new CustomEvent('ai-office-enqueue-task', { detail:{ id:t.id } }));
         }
+      }
+    });
+
+    wrap.querySelectorAll('.retry-bad-reports').forEach(b => b.onclick = () => {
+      const p = state.projects.find(x => x.id === b.dataset.id);
+      if (!p) return;
+
+      const badTaskIds = new Set();
+      for (const id of p.taskIds) {
+        const report = state.reports.find(r => r.taskId === id && r.projectId === p.id);
+        const text = String(report?.result || '').trim();
+        const markers = ['[CEO 목표]','[프로젝트]','보고 형식:','당신은 AI 회사'];
+        const bad = !report || text.length < 120 || markers.filter(m => text.includes(m)).length >= 3;
+        if (bad) badTaskIds.add(id);
+      }
+
+      state.reports = state.reports.filter(r => !badTaskIds.has(r.taskId));
+      for (const id of badTaskIds) {
+        const t = state.tasks.find(x => x.id === id);
+        if (!t) continue;
+        t.status = 'queued';
+        t.automationError = '';
+        t.partialResult = '';
+        t.finishedAt = null;
+      }
+
+      p.status = 'working';
+      p.qualityError = '';
+      p.finalTaskId = null;
+      p.finalReportId = null;
+      persist();
+      renderAll();
+
+      for (const id of badTaskIds) {
+        window.dispatchEvent(new CustomEvent('ai-office-enqueue-task', { detail:{ id } }));
       }
     });
 
