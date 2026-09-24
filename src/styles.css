@@ -574,3 +574,25 @@ body{overflow:hidden}.app-shell{height:100vh;min-height:0;overflow:hidden}main{h
 .game-office .sim-employee.sim-working .employee-character{transform:translateX(-50%) translateY(2px)}
 .game-office .sim-employee.sim-meeting,.game-office .sim-employee.sim-reporting,.game-office .sim-employee.sim-ceo-report{z-index:12}
 .layout-editing .sim-employee{transition:left .35s ease,top .35s ease,opacity .2s ease!important}
+
+/* v1.2.1 calibrated seats + seated staff */
+.game-office .sim-employee{width:96px!important;height:104px!important;transform:translate(-50%,-50%)!important;overflow:visible}
+.game-office .employee-status-bubble{top:-18px!important;min-width:0!important;max-width:94px!important;padding:3px 6px!important;border-width:1px!important;border-radius:5px!important}
+.game-office .employee-status-bubble b{font-size:8px!important}.game-office .employee-status-bubble small{display:none!important}
+.game-office .employee-character{top:22px!important;width:72px!important;height:72px!important;overflow:visible}
+.game-office .asset-pixel-avatar,.game-office .asset-pixel-avatar .asset-sprite{width:72px!important;height:72px!important}
+.game-office .asset-pixel-avatar .asset-sprite{background-size:504px 72px!important}
+.game-office .asset-pixel-avatar.role-marketing .asset-sprite{background-position:-72px 0!important}
+.game-office .asset-pixel-avatar.role-development .asset-sprite{background-position:-144px 0!important}
+.game-office .asset-pixel-avatar.role-design .asset-sprite{background-position:-216px 0!important}
+.game-office .asset-pixel-avatar.role-analysis .asset-sprite{background-position:-288px 0!important}
+.game-office .asset-pixel-avatar.role-qa .asset-sprite{background-position:-360px 0!important}
+.game-office .asset-pixel-avatar.role-leader .asset-sprite{background-position:-432px 0!important}
+.game-office .seat-seated .employee-character{top:31px!important;height:55px!important;overflow:hidden!important}
+.game-office .seat-seated .asset-pixel-avatar{transform:translateY(7px) scale(.86)!important;transform-origin:center top!important}
+.game-office .seat-seated .asset-pixel-avatar .asset-sprite{filter:drop-shadow(0 3px 2px #0005)!important}
+.game-office .seat-facing-down .asset-pixel-avatar{transform:translateY(4px) scale(.88)!important}
+.game-office .seat-seated.seat-facing-down .employee-character{top:27px!important}
+.game-office .sim-working.seat-seated .asset-pixel-avatar{animation:seatedWork .6s steps(2,end) infinite alternate!important}
+@keyframes seatedWork{to{transform:translateY(8px) scale(.86)}}
+.game-office .employee-task-caption{display:none!important}
