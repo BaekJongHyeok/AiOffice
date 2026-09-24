@@ -202,7 +202,24 @@ const updateButton = $('#updateAppBtn');
 if (updateButton) {
   updateButton.onclick = async () => {
     if (!confirm('GitHub에서 최신 버전을 받고 AI OFFICE를 재시작할까요?')) return;
-    const result = await window.aiOffice.runUpdater();
-    if (!result?.ok) alert(result?.error || '업데이트 프로그램을 실행하지 못했습니다.');
+
+    const originalText = updateButton.textContent;
+    updateButton.disabled = true;
+    updateButton.textContent = '⏳ 업데이트 중...';
+
+    try {
+      const result = await window.aiOffice.runUpdater();
+      if (!result?.ok) {
+        alert(result?.error || '업데이트를 실행하지 못했습니다.');
+        updateButton.disabled = false;
+        updateButton.textContent = originalText;
+        return;
+      }
+      updateButton.textContent = '✅ 재시작 중...';
+    } catch (error) {
+      alert('업데이트 요청 중 오류가 발생했습니다.\n\n' + (error?.message || String(error)));
+      updateButton.disabled = false;
+      updateButton.textContent = originalText;
+    }
   };
 }
