@@ -693,3 +693,56 @@ body{overflow:hidden}.app-shell{height:100vh;min-height:0;overflow:hidden}main{h
 }
 .game-office .employee-status-bubble b{font-size:8.5px!important}
 .game-office .sim-working .employee-character{animation:typingBob .45s infinite alternate!important}
+
+/* v1.3 depth layering + larger staff */
+.game-office .furniture-base-layer{z-index:4!important}
+.game-office .sim-employees{z-index:6!important}
+.game-office .office-furniture-front{
+  position:absolute;inset:0;z-index:8;pointer-events:none;
+}
+.game-office .furniture-front-piece{
+  position:absolute;pointer-events:none;image-rendering:pixelated;
+}
+.game-office .furniture-front-piece img{
+  width:100%;height:100%;display:block;object-fit:contain;object-position:center bottom;
+  image-rendering:pixelated;filter:drop-shadow(0 5px 3px #0004)
+}
+.game-office .sim-employee{
+  width:156px!important;
+  height:164px!important;
+  transform:translate(-50%,-58%)!important;
+  z-index:var(--employee-depth)!important;
+  overflow:visible!important;
+}
+.game-office .employee-character{
+  top:34px!important;
+  width:116px!important;
+  height:116px!important;
+  overflow:visible!important;
+}
+.game-office .asset-pixel-avatar,
+.game-office .asset-pixel-avatar .asset-sprite{
+  width:116px!important;
+  height:116px!important;
+}
+.game-office .asset-pixel-avatar .asset-sprite{
+  background-size:812px 116px!important;
+}
+.game-office .asset-pixel-avatar.role-planning .asset-sprite{background-position:0 0!important}
+.game-office .asset-pixel-avatar.role-marketing .asset-sprite{background-position:-116px 0!important}
+.game-office .asset-pixel-avatar.role-development .asset-sprite{background-position:-232px 0!important}
+.game-office .asset-pixel-avatar.role-design .asset-sprite{background-position:-348px 0!important}
+.game-office .asset-pixel-avatar.role-analysis .asset-sprite{background-position:-464px 0!important}
+.game-office .asset-pixel-avatar.role-qa .asset-sprite{background-position:-580px 0!important}
+.game-office .asset-pixel-avatar.role-leader .asset-sprite{background-position:-696px 0!important}
+.game-office .employee-status-bubble{
+  top:-9px!important;
+  min-width:82px!important;
+  max-width:128px!important;
+  padding:4px 7px!important;
+  z-index:40!important;
+}
+.game-office .employee-status-bubble b{font-size:9px!important}
+.layout-editing .office-furniture-front{z-index:41!important;opacity:.86}
+.layout-editing .furniture-base-layer{z-index:40!important}
+.layout-editing .sim-employees{z-index:20!important}
